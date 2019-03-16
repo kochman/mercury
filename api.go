@@ -2,9 +2,6 @@ package main
 
 import (
 	
-	// "os"
-
-	// log "github.com/sirupsen/logrus"
 	"fmt"
 	"net/http"
 
@@ -13,19 +10,10 @@ import (
 )
 
 
-type API struct{
-	handler http.Handler
-}
-
-
 func CreateRoutes(store *Store){
 
-
-
+	// gets users own info
 	i, _ := store.MyInfo()
-	
-	
-	fmt.Print("this is a ",i.Name)
 
 	r := chi.NewRouter()
 

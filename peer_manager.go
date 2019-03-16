@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/grandcat/zeroconf"
@@ -19,7 +20,12 @@ func (pm *PeerManager) Run() {
 	log.Debug("PeerManager run")
 
 	// register us
-	server, err := zeroconf.Register("Mercury", "_mercury._tcp", "local.", 9316, nil, nil)
+	name, err := os.Hostname()
+	if err != nil {
+		log.WithError(err).Error("unable to get hostname")
+		return
+	}
+	server, err := zeroconf.Register(name, "_mercury._tcp", "local.", 9316, nil, nil)
 	if err != nil {
 		log.WithError(err).Error("unable to register zeroconf service")
 		return

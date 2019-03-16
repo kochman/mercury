@@ -45,6 +45,12 @@ func main() {
 	}
 	fmt.Println(i)
 
+	msgs, err := store.EncryptedMessages()
+	if err != nil {
+		log.WithError(err).Error("unable to get messages")
+	}
+	fmt.Println(msgs)
+
 	pm := NewPeerManager()
 
 	// go this async in the future

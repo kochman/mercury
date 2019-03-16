@@ -35,6 +35,7 @@ func NewKeyPair(file string) (*KeyPair, error) {
 	return retVal, nil
 }
 
+// LoadKeyPair loads a key pair from a file
 func LoadKeyPair(file string) (*KeyPair, error) {
 	retVal := &KeyPair{}
 

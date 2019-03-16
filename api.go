@@ -8,6 +8,12 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+
+	"encoding/pem"
+
+	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type API struct {
@@ -35,12 +41,29 @@ func CreateRoutes(store *Store, box *packr.Box) {
 
 	r.Use(middleware.DefaultCompress)
 
-	r.Get("/", a.IndexHandler)
-	r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Print(r)
-		w.Write([]byte(i.Name))
+	r.Get("/self", func(w http.ResponseWriter, r *http.Request){
+		w.Header().Set("Content-Type", "application/json")
+
+
+		//create the pem object to perform encoding
+		block := &pem.Block{
+			Type: "MESSAGE",
+			Bytes: []byte(i.PublicKey),
+		}
+	
+		// writes human readable public key to page
+		w.Write(pem.EncodeToMemory(block))
+		fmt.Println()
 	})
-	fmt.Println("here")
+	
+	//parse through messages that pertain to certain user
+	r.Get("/messages", func(w http.ResponseWriter, r *http.Request){
+		w.Write([]byte("your messages go here"))
+	})
+
+	// listen
+	r.Get("/", a.IndexHandler)
+
 	http.ListenAndServe(":3000", r)
 
 }

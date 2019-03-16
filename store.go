@@ -120,3 +120,4 @@ func (s *Store) DecryptedMessages() ([]*DecryptedMessage, error) {
 func (s *Store) AddDecryptedMessage(msg *DecryptedMessage) error {
 	return s.db.Save(msg)
 }
+

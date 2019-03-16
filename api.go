@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/pem"
+	"encoding/json"
 	"net/http"
+	"time"
 
 
 	"github.com/go-chi/chi"
@@ -48,9 +50,46 @@ func NewAPI(store *Store, box *packr.Box) *API {
 		w.Write(pem.EncodeToMemory(block))
 	})
 
+	// MOCK DATA
+	// TO DELETE
+	
+	msg := &EncryptedMessage{
+
+		ID:			[]byte("1"),
+		Sent:		time.Now(),
+		Contents:	[]byte("test"),
+	}
+	msg2 := &EncryptedMessage{
+
+		ID:			[]byte("2"),
+		Sent:		time.Now(),
+		Contents:	[]byte("test"),
+	}
+
+
+
+	store.AddEncryptedMessage(msg)
+	store.AddEncryptedMessage(msg2)
+
+	//DELETE ABOVE MOCK DATA
+
+
 	//parse through messages that pertain to certain user
-	r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("your messages go here"))
+	r.Get("/api/messages", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		// get all the decrypted messages this person has
+		a, _ := store.DecryptedMessages()
+
+		// spacing out the json data
+		output, err := json.MarshalIndent(a, "", " ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		//write the output to the page
+		w.Write(output)
 	})
 
 	// listen

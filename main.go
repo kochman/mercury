@@ -59,6 +59,9 @@ func main() {
 	fmt.Println(msgs)
 
 	pm := NewPeerManager()
-	// do this async in the future
+
+	mm := NewMessagesManager(store, pm)
+	_ = mm
+
 	pm.Run()
 }

@@ -49,4 +49,6 @@ func main() {
 
 	// go this async in the future
 	pm.Run()
+
+	CreateRoutes(store)
 }

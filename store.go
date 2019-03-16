@@ -1,12 +1,18 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/asdine/storm"
 )
 
 type Store struct {
 	db *storm.DB
 }
+
+var (
+	ErrNotFound = errors.New("not found")
+)
 
 func NewStore() (*Store, error) {
 	db, err := storm.Open("mercury.db")
@@ -33,8 +39,8 @@ func NewStore() (*Store, error) {
 // Contacts
 
 type Contact struct {
-	ID int
-	Name string
+	ID        int
+	Name      string
 	PublicKey []byte
 }
 
@@ -52,4 +58,28 @@ func (s *Store) Contact(id int) (*Contact, error) {
 
 func (s *Store) CreateContact(c *Contact) error {
 	return s.db.Save(c)
+}
+
+// MyInfo stores the info for the current user
+type MyInfo struct {
+	ID         int
+	Name       string
+	PublicKey  []byte
+	PrivateKey []byte
+}
+
+func (s *Store) SetMyInfo(info *MyInfo) error {
+	return s.db.Save(info)
+}
+
+func (s *Store) MyInfo() (*MyInfo, error) {
+	info := MyInfo{}
+	err := s.db.One("ID", 1, &info)
+	if err != nil {
+		if err == storm.ErrNotFound {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &info, nil
 }

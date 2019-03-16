@@ -5,6 +5,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -29,8 +30,25 @@ func NewKeyPair() (*KeyPair, error) {
 		return nil, err
 	}
 	retVal.privateKey = key
+	savePEMKey("key.pem", retVal.privateKey)
 
 	return retVal, nil
+}
+
+func LoadKeyPair(file string) (*KeyPair, error) {
+	retVal := &KeyPair{}
+
+	key, err := readPEMKey(file)
+	if err != nil {
+		return nil, err
+	}
+	retVal.privateKey = key
+	return retVal, nil
+}
+
+func main() {
+	k, _ := LoadKeyPair("key.pem")
+	_ = k
 }
 
 // Sign allows you to sign text with the public key
@@ -58,45 +76,28 @@ func (key *KeyPair) UnSign(label string, text string) (*string, error) {
 
 }
 
-func main() {
-	key, _ := NewKeyPair()
-	ret, err := key.Sign("msg", "This is a test")
+func readPEMKey(fileName string) (*rsa.PrivateKey, error) {
+	privateKeyFile, err := os.Open(fileName)
+
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	fmt.Println(*ret)
-	us, _ := key.UnSign("msg", *ret)
-	fmt.Println(*us)
 
+	pemfileinfo, _ := privateKeyFile.Stat()
+	size := pemfileinfo.Size()
+
+	pembytes := make([]byte, size)
+	buffer := bufio.NewReader(privateKeyFile)
+	_, err = buffer.Read(pembytes)
+	data, _ := pem.Decode([]byte(pembytes))
+	privateKeyImported, err := x509.ParsePKCS1PrivateKey(data.Bytes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKeyImported, nil
 }
-
-// 	reader := rand.Reader
-// 	bitSize := 144
-
-// 	key, err := rsa.GenerateKey(reader, bitSize)
-// 	checkError(err)
-
-// 	publicKey := key.PublicKey
-
-// 	savePEMKey("private.pem", key)
-
-// 	asn1Bytes, err := asn1.Marshal(publicKey)
-// 	entropy := asn1Bytes
-
-// 	fmt.Println(entropy)
-// 	mnemonic, err := bip39.NewMnemonic(entropy)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-
-// 	fmt.Println(mnemonic)
-// 	// converting mnemonic back to a byte array + checksum
-// 	arr, _ := bip39.MnemonicToByteArray(mnemonic)
-
-// 	fmt.Print(arr)
-// 	fmt.Print("ASDF")
-// 	savePublicPEMKey("public.pem", publicKey)
-// }
 
 func savePEMKey(fileName string, key *rsa.PrivateKey) {
 	outFile, err := os.Create(fileName)

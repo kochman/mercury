@@ -1,19 +1,18 @@
 package main
 
 import (
-	"fmt"
+	"encoding/pem"
 	"net/http"
 
-	"github.com/gobuffalo/packr/v2"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-
-	"encoding/pem"
+	"github.com/gobuffalo/packr/v2"
 )
 
 type API struct {
 	box *packr.Box
+	r http.Handler
 }
 
 func (a *API) IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,9 +24,8 @@ func (a *API) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(s)
 }
 
-func CreateRoutes(store *Store, box *packr.Box) {
-
-	a := API{
+func NewAPI(store *Store, box *packr.Box) *API {
+	a := &API{
 		box: box,
 	}
 	// gets users own info
@@ -38,7 +36,7 @@ func CreateRoutes(store *Store, box *packr.Box) {
 	r.Use(middleware.DefaultCompress)
 
 	r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
 
 		//create the pem object to perform encoding
 		block := &pem.Block{
@@ -48,7 +46,6 @@ func CreateRoutes(store *Store, box *packr.Box) {
 
 		// writes human readable public key to page
 		w.Write(pem.EncodeToMemory(block))
-		fmt.Println()
 	})
 
 	//parse through messages that pertain to certain user
@@ -59,6 +56,11 @@ func CreateRoutes(store *Store, box *packr.Box) {
 	// listen
 	r.Get("/", a.IndexHandler)
 
-	http.ListenAndServe(":3000", r)
+	a.r = r
 
+	return a
+}
+
+func (a *API) Run() {
+	http.ListenAndServe(":3000", a.r)
 }

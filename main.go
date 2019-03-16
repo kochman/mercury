@@ -44,12 +44,12 @@ func main() {
 		}
 	}
 	i, err = store.MyInfo()
-
-	CreateRoutes(store, box)
-
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	api := NewAPI(store, box)
+	go api.Run()
 	// fmt.Println(i)
 
 	msgs, err := store.EncryptedMessages()
@@ -59,7 +59,6 @@ func main() {
 	fmt.Println(msgs)
 
 	pm := NewPeerManager()
-
-	// go this async in the future
+	// do this async in the future
 	pm.Run()
 }

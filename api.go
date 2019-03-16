@@ -74,23 +74,42 @@ func NewAPI(store *Store, box *packr.Box) *API {
 	//DELETE ABOVE MOCK DATA
 
 
-	//parse through messages that pertain to certain user
-	r.Get("/api/messages", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+	r.Route("/api", func(r chi.Router){
+		r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/plain")
 
-		// get all the decrypted messages this person has
-		a, _ := store.DecryptedMessages()
+			//create the pem object to perform encoding
+			block := &pem.Block{
+				Type:  "MESSAGE",
+				Bytes: []byte(i.PublicKey),
+			}
 
-		// spacing out the json data
-		output, err := json.MarshalIndent(a, "", " ")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+			// writes human readable public key to page
+			w.Write(pem.EncodeToMemory(block))
+		})
+		// display messages that user has in decrypted store
+		r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
 
-		//write the output to the page
-		w.Write(output)
+			// get all the decrypted messages this person has
+			a, _ := store.DecryptedMessages()
+	
+			// spacing out the json data
+			output, err := json.MarshalIndent(a, "", " ")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+	
+			//write the output to the page
+			w.Write(output)
+		})
 	})
+
+	
+
+	//DO POST REQUEST HERE FOR SENDING MESSAGES
+
 
 	// listen
 	r.Get("/", a.IndexHandler)

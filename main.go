@@ -45,7 +45,7 @@ func main() {
 	}
 	i, err = store.MyInfo()
 
-	CreateRoutes(store)
+	CreateRoutes(store, box)
 
 	if err != nil {
 		fmt.Println(err)

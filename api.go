@@ -40,7 +40,6 @@ func CreateRoutes(store *Store, box *packr.Box) {
 		fmt.Print(r)
 		w.Write([]byte(i.Name))
 	})
-	fmt.Println("here")
 	http.ListenAndServe(":3000", r)
 
 }

@@ -46,10 +46,10 @@ func LoadKeyPair(file string) (*KeyPair, error) {
 	return retVal, nil
 }
 
-func main() {
-	k, _ := LoadKeyPair("key.pem")
-	_ = k
-}
+// func main() {
+// 	k, _ := LoadKeyPair("key.pem")
+// 	_ = k
+// }
 
 // Sign allows you to sign text with the public key
 func (key *KeyPair) Sign(label string, text string) (*string, error) {

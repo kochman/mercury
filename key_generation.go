@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -19,6 +20,7 @@ import (
 // KeyPair generates a private key public key pair and allows signing
 type KeyPair struct {
 	privateKey *rsa.PrivateKey
+	PublicKey  *rsa.PublicKey
 }
 
 // NewKeyPair generates a new key pair
@@ -30,9 +32,20 @@ func NewKeyPair(file string) (*KeyPair, error) {
 		return nil, err
 	}
 	retVal.privateKey = key
+	retVal.PublicKey = &key.PublicKey
 	savePEMKey(file, retVal.privateKey)
 
 	return retVal, nil
+}
+
+// PublicKeyFromBytes returns a key pair with a public key from bytes
+func PublicKeyFromBytes(key []byte) (*KeyPair, error) {
+	var ret rsa.PublicKey
+	_, err := asn1.Unmarshal(key, &ret)
+	if err != nil {
+		return nil, err
+	}
+	return &KeyPair{PublicKey: &ret}, nil
 }
 
 // LoadKeyPair loads a key pair from a file
@@ -44,13 +57,14 @@ func LoadKeyPair(file string) (*KeyPair, error) {
 		return nil, err
 	}
 	retVal.privateKey = key
+	retVal.PublicKey = &key.PublicKey
 	return retVal, nil
 }
 
 // Sign allows you to sign text with the public key
 func (key *KeyPair) Sign(label string, text string) (*string, error) {
 	rng := rand.Reader
-	ret, err := rsa.EncryptOAEP(sha256.New(), rng, &key.privateKey.PublicKey, []byte(text), []byte(label))
+	ret, err := rsa.EncryptOAEP(sha256.New(), rng, key.PublicKey, []byte(text), []byte(label))
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +75,9 @@ func (key *KeyPair) Sign(label string, text string) (*string, error) {
 
 // UnSign unsigns the text with the private key
 func (key *KeyPair) UnSign(label string, text string) (*string, error) {
+	if key.privateKey == nil {
+		return nil, errors.New("no private key")
+	}
 	reader := rand.Reader
 
 	ret, err := rsa.DecryptOAEP(sha256.New(), reader, key.privateKey, []byte(text), []byte(label))

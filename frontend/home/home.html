@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+	<title>Mercury</title>
+</head>
+
+<body>
+<div class="container">
+	<h1 style="font-size:110px;text-align:center"> Mercury </h1>
+	<!-- Send form -->
+	<div class="section">
+	<p>
+		<h2> To: </h2>
+		<div class="field is-horizontal">
+  			<div class="field-body">
+    			<div class="field is-narrow">
+      				<div class="control">
+        				<div class="select is-fullwidth">
+          				<select id="unique_id">
+            				<option>Address 1</option>
+            				<option>Address 2</option>
+            				<option>Address 3</option>
+          				</select>
+        				</div>
+      				</div>
+    			</div>
+  			</div>
+		</div>
+	</p>
+	</div>
+    
+	<!-- Message form -->
+	<div class="section">
+		<h2 id="sub-title-message">Message:<br> 
+		<div class="field-body">
+    		<div class="field">
+      			<div class="control">
+        			<textarea id="message" name="message" class="textarea" form="form" placeholder="What do you want to say?"></textarea>
+      			</div>
+    		</div>
+  		</div>
+	</div>
+
+	<!-- Submit Button  -->
+	<div id="button" >
+		<button class="button is-info is-outlined" onclick="validateForm()">Submit</button>
+	</div>
+</div>
+
+<!-- JS FILE --> 
+<script src="home.js"></script>
+</body>
+</html>

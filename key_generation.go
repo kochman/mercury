@@ -22,7 +22,7 @@ type KeyPair struct {
 }
 
 // NewKeyPair generates a new key pair
-func NewKeyPair() (*KeyPair, error) {
+func NewKeyPair(file string) (*KeyPair, error) {
 	retVal := &KeyPair{}
 
 	key, err := rsa.GenerateKey(rand.Reader, 4096)
@@ -30,7 +30,7 @@ func NewKeyPair() (*KeyPair, error) {
 		return nil, err
 	}
 	retVal.privateKey = key
-	savePEMKey("key.pem", retVal.privateKey)
+	savePEMKey(file, retVal.privateKey)
 
 	return retVal, nil
 }
@@ -44,11 +44,6 @@ func LoadKeyPair(file string) (*KeyPair, error) {
 	}
 	retVal.privateKey = key
 	return retVal, nil
-}
-
-func main() {
-	k, _ := LoadKeyPair("key.pem")
-	_ = k
 }
 
 // Sign allows you to sign text with the public key

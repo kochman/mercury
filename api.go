@@ -1,7 +1,6 @@
 package main
 
 import (
-	
 	"fmt"
 	"net/http"
 
@@ -9,8 +8,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-
-func CreateRoutes(store *Store){
+func CreateRoutes(store *Store) {
 
 	// gets users own info
 	i, _ := store.MyInfo()
@@ -19,11 +17,11 @@ func CreateRoutes(store *Store){
 
 	r.Use(middleware.DefaultCompress)
 
-	r.Get("/self", func(w http.ResponseWriter, r *http.Request){
+	r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Print(r)
 		w.Write([]byte(i.Name))
 	})
-
+	fmt.Println("here")
 	http.ListenAndServe(":3000", r)
 
 }

@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gobuffalo/packr/v2"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 	log.Info("starting Mercury...")
 	log.SetLevel(log.DebugLevel)
+
+	box := packr.New("static", "./static")
 
 	store, err := NewStore()
 	if err != nil {
@@ -19,6 +22,7 @@ func main() {
 	_ = store
 
 	i, err := store.MyInfo()
+	_ = i
 
 	if err != nil {
 		if err == ErrNotFound {
@@ -40,15 +44,16 @@ func main() {
 		}
 	}
 	i, err = store.MyInfo()
+
+	CreateRoutes(store)
+
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(i)
+	// fmt.Println(i)
 
 	pm := NewPeerManager()
 
 	// go this async in the future
 	pm.Run()
-
-	CreateRoutes(store)
 }

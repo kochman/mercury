@@ -4,10 +4,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type PeerManager struct {}
+type PeerManager struct{}
 
 func NewPeerManager() *PeerManager {
-    return &PeerManager{}
+	return &PeerManager{}
 }
 
 func (pm *PeerManager) Run() {

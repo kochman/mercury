@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 	"strconv"
+	// "encoding/pem"
 
 	log "github.com/sirupsen/logrus"
     "github.com/go-chi/chi"
@@ -28,6 +29,7 @@ type Peer struct {
 	ID string
 	Addresses []net.IP
 	Port int
+	Contact *Contact
 }
 
 func NewPeerManager(s *Store) *PeerManager {
@@ -40,7 +42,7 @@ func NewPeerManager(s *Store) *PeerManager {
 	r := chi.NewRouter()
 	r.Get("/messages", pm.messagesHandler)
 	r.Get("/peers", pm.peersHandler)
-	r.Post("/notify", pm.notifyHandler)
+	r.Get("/pubkey", pm.pubkeyHandler)
 	pm.handler = r
 
 	return pm
@@ -108,6 +110,27 @@ func (pm *PeerManager) Run() {
 	}
 }
 
+func (pm *PeerManager) NewContacts() ([]*Contact, error) {
+	contacts := []*Contact{}
+	pm.m.Lock()
+	defer pm.m.Unlock()
+	for _, peer := range pm.peers {
+		if peer.Contact == nil {
+			continue
+		}
+		added, err := pm.s.PublicKeyAdded(peer.Contact.PublicKey)
+		if err != nil {
+			log.Error("HERE")
+			return contacts, err
+		}
+		if added {
+			continue
+		}
+		contacts = append(contacts, peer.Contact)
+	}
+	return contacts, nil
+}
+
 func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 	if entry.Instance == pm.myUUID {
 		// ignore ourself
@@ -122,9 +145,10 @@ func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 
 	pm.m.Lock()
 	defer pm.m.Unlock()
-	if _, ok := pm.peers[p.ID]; ok {
-		// already have this peer
+	if peer, ok := pm.peers[p.ID]; ok {
+		// already have this peer, just update addresses
 		log.Debugf("peer %s already known", p.ID)
+		peer.Addresses = p.Addresses
 		return
 	}
 
@@ -159,22 +183,6 @@ func (pm *PeerManager) peersHandler(w http.ResponseWriter, r *http.Request) {
 		log.WithError(err).Error("unable to encode peers")
 		return
 	}
-
-	// dec := json.NewDecoder(r.Body)
-	// if err := dec.Decode(&peers); err != nil {
-	// 	http.Error(w, "unable to decode peers", http.StatusInternalServerError)
-	// 	log.WithError(err).Error("unable to decode peers")
-	// 	return
-	// }
-
-	// log.Debugf("got peers %+v", peers)
-}
-
-func (pm *PeerManager) notifyHandler(w http.ResponseWriter, r *http.Request) {
-	log.Debug("notifyHandler")
-
-
-	// pm.notify <- 
 }
 
 func (pm *PeerManager) fetchMessages() {
@@ -202,6 +210,27 @@ func (pm *PeerManager) fetchMessages() {
 			} else {
 				log.Errorf("peer %s addr type is unknown", peerID)
 				continue
+			}
+
+			if peer.Contact == nil {
+				contactEndpoint := endpoint
+				contactEndpoint.Path = "/pubkey"
+				req, err := http.NewRequest(http.MethodGet, contactEndpoint.String(), nil)
+				if err != nil {
+					continue
+				}
+				resp, err := c.Do(req)
+				if err != nil {
+					continue
+				}
+				dec := json.NewDecoder(resp.Body)
+				c := &Contact{}
+				err = dec.Decode(c)
+				if err != nil {
+					log.WithError(err).Error("unable to decode peer contact")
+					continue
+				}
+				peer.Contact = c
 			}
 
 			req, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)
@@ -282,72 +311,29 @@ func (pm *PeerManager) handleMessages(msgs []*EncryptedMessage) {
 	}
 }
 
+type PeerKey struct {
+	PubKey string
+}
 
-// func oldpeermanagerstuff() {
-// 	// join multicast group, send broadcast messages, handle incoming messages...
-// 	groupAddr, err := net.ResolveUDPAddr("udp6", MulticastGroupAddr)
-// 	if err != nil {
-// 		log.WithError(err).Error("unable to resolve multicast group addr")
-// 		return
-// 	}
+func (pm *PeerManager) pubkeyHandler(w http.ResponseWriter, r *http.Request) {
+	i, err := pm.s.MyInfo()
+	if err != nil {
+		log.WithError(err).Error("unable to get my key")
+		http.Error(w, "unable to get my key", http.StatusInternalServerError)
+		return
+	}
 
-// 	c, err := net.ListenPacket("udp6", ":0")
-// 	if err != nil {
-// 		log.WithError(err).Error("unable to announce")
-// 		return
-// 	}
-// 	defer c.Close()
-
-// 	intfs, err := net.Interfaces()
-// 	if err != nil {
-// 		log.WithError(err).Error("unable to get interfaces")
-// 		return
-// 	}
-
-// 	p := ipv6.NewPacketConn(c)
-
-// 	joined := false
-// 	for _, intf := range intfs {
-// 		if err := p.JoinGroup(&intf, groupAddr); err != nil {
-// 			continue
-// 		}
-// 		joined = true
-// 	}
-// 	if !joined {
-// 		log.Error("unable to join multicast group on any interface")
-// 		return
-// 	}
-
-// 	go func() {
-// 		wcm := &ipv6.ControlMessage{
-// 			HopLimit: 1,
-// 		}
-// 		ticker := time.Tick(time.Second)
-// 		for range ticker {
-// 			for _, intf := range intfs {
-// 				wcm.IfIndex = intf.Index
-// 				_, err := p.WriteTo([]byte("hello world"), wcm, groupAddr)
-// 				if err != nil {
-// 					// this will fail on a lot of interfaces
-// 					continue
-// 				}
-// 				log.Debugf("wrote announcement to group on %s", intf.Name)
-// 			}
-// 		}
-// 	}()
-
-// 	b := make([]byte, 1500)
-// 	for {
-// 		n, _, src, err := p.ReadFrom(b)
-// 		if err != nil {
-// 			log.WithError(err).Error("unable to read")
-// 			continue
-// 		}
-// 		// if rcm.Dst.IsMulticast() {
-// 		// 	if rcm.Dst.Equal(groupAddr) {
-// 		// 		log.Debug("message to group")
-// 		// 	}
-// 		// }
-// 		log.Debugf("got %d-byte message from %s: \"%s\"", n, src.String(), b)
-// 	}
-// }
+	// make this into a contact so privkey isn't exposed
+	c := &Contact{
+		Name: i.Name,
+		PublicKey: i.PublicKey,
+	}
+	w.Header().Set("content-type", "application/json")
+	enc := json.NewEncoder(w)
+	err = enc.Encode(c)
+	if err != nil {
+		log.WithError(err).Error("unable to encode contact")
+		http.Error(w, "unable to encode contact", http.StatusInternalServerError)
+		return
+	}
+}

@@ -11,6 +11,20 @@ function validateForm(){
 }
 
 // Function to send the message 
-function sendMessage(){
-	console.log("sldnfds");
+function sendMessage() {
+	
+	$.ajax({
+		url: "localhost:3000",
+		method: "POST",
+		data: {
+			TargetUserID: $("#unique_id"),
+			Message: $("#message")
+		},
+		success: function (result) {
+			console.log("success")
+			console.log(result)
+		}
+	})
 }
+
+

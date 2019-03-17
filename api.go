@@ -39,18 +39,6 @@ func NewAPI(store *Store, box *packr.Box) *API {
 
 	r.Use(middleware.DefaultCompress)
 
-	r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-
-		//create the pem object to perform encoding
-		block := &pem.Block{
-			Type:  "MESSAGE",
-			Bytes: []byte(i.PublicKey),
-		}
-
-		// writes human readable public key to page
-		w.Write(pem.EncodeToMemory(block))
-	})
 
 	// MOCK DATA
 	// TO DELETE
@@ -128,7 +116,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 		msg := &EncryptedMessage{
 			ID:		 	[]byte(u2.String()),
 			Sent:	 	time.Now(),
-			Contents:	[]byte(to),
+			Contents:	[]byte(string(to)),
 		}
 
 		// fmt.Println("type of ", reflect.TypeOf(u2))

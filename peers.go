@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"os"
+	"sync"
+	"net"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/grandcat/zeroconf"
@@ -10,10 +12,27 @@ import (
 
 const MulticastGroupAddr = "[ff12::9316]:9316"
 
-type PeerManager struct{}
+type PeerManager struct {
+	m *sync.Mutex
+	callbacks []func(*Peer)
+}
+
+type Peer struct {
+	Addresses []net.IP
+	Port int
+}
 
 func NewPeerManager() *PeerManager {
-	return &PeerManager{}
+	return &PeerManager{
+		m: &sync.Mutex{},
+		callbacks: []func(*Peer){},
+	}
+}
+
+func (pm *PeerManager) RegisterNewPeerCallback(f func(*Peer)) {
+	pm.m.Lock()
+	pm.callbacks = append(pm.callbacks, f)
+	pm.m.Unlock()
 }
 
 func (pm *PeerManager) Run() {
@@ -48,6 +67,17 @@ func (pm *PeerManager) Run() {
 
 	for entry := range entries {
 		log.Debug(entry)
+		p := &Peer{
+			Port: entry.Port,
+		}
+		p.Addresses = append(p.Addresses, entry.AddrIPv6...)
+		p.Addresses = append(p.Addresses, entry.AddrIPv4...)
+
+		pm.m.Lock()
+		for _, cb := range pm.callbacks {
+			cb(p)
+		}
+		pm.m.Unlock()
 	}
 }
 

@@ -9,13 +9,12 @@ require (
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/gobuffalo/packr/v2 v2.0.6
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/grandcat/zeroconf v0.0.0-20190118114326-c2d1b4121200
 	github.com/miekg/dns v1.1.6 // indirect
 	github.com/sirupsen/logrus v1.4.0
-	github.com/spf13/viper v1.3.2
-	github.com/tyler-smith/go-bip39 v1.0.0
 	github.com/vmihailenco/msgpack v4.0.2+incompatible // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
 	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect

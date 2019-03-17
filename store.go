@@ -90,7 +90,7 @@ func (s *Store) MyInfo() (*MyInfo, error) {
 // Messages
 
 type EncryptedMessage struct {
-	ID []byte
+	ID string
 	Sent time.Time
 	Contents []byte
 }

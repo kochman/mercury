@@ -134,7 +134,7 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := &EncryptedMessage{
-		ID:       []byte(u2.String()),
+		ID:       u2.String(),
 		Sent:     time.Now(),
 		Contents: []byte(*content),
 	}
@@ -165,16 +165,14 @@ func NewAPI(store *Store, box *packr.Box) *API {
 	// TO DELETE
 
 	msg := &EncryptedMessage{
-
-		ID:       []byte("1"),
-		Sent:     time.Now(),
-		Contents: []byte("test"),
+		ID:			"1",
+		Sent:		time.Now(),
+		Contents:	[]byte("test"),
 	}
 	msg2 := &EncryptedMessage{
-
-		ID:       []byte("2"),
-		Sent:     time.Now(),
-		Contents: []byte("test"),
+		ID:			"2",
+		Sent:		time.Now(),
+		Contents:	[]byte("test"),
 	}
 
 	store.AddEncryptedMessage(msg)

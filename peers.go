@@ -2,49 +2,64 @@ package main
 
 import (
 	"context"
-	"os"
-	"sync"
 	"net"
+	"encoding/json"
+	"net/http"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
+    "github.com/go-chi/chi"
 	"github.com/grandcat/zeroconf"
+	"github.com/gofrs/uuid"
 )
 
 const MulticastGroupAddr = "[ff12::9316]:9316"
 
 type PeerManager struct {
+	s *Store
+	handler http.Handler
 	m *sync.Mutex
-	callbacks []func(*Peer)
+	peers map[string]*Peer
 }
 
 type Peer struct {
+	ID string
 	Addresses []net.IP
 	Port int
 }
 
-func NewPeerManager() *PeerManager {
-	return &PeerManager{
+func NewPeerManager(s *Store) *PeerManager {
+	pm := &PeerManager{
+		s: s,
 		m: &sync.Mutex{},
-		callbacks: []func(*Peer){},
+		peers: map[string]*Peer{},
 	}
-}
 
-func (pm *PeerManager) RegisterNewPeerCallback(f func(*Peer)) {
-	pm.m.Lock()
-	pm.callbacks = append(pm.callbacks, f)
-	pm.m.Unlock()
+	r := chi.NewRouter()
+	r.Get("/messages", pm.messagesHandler)
+	r.Get("/peers", pm.peersHandler)
+	// r.Post("/peers", pm.addPeersHandler)
+	r.Post("/notify", pm.notifyHandler)
+	pm.handler = r
+
+	return pm
 }
 
 func (pm *PeerManager) Run() {
 	log.Debug("PeerManager run")
 
+	go func() {
+		err := http.ListenAndServe(":3001", pm.handler)
+		log.WithError(err).Error("PeerManager unable to listen and serve")
+	}()
+
 	// register us
-	name, err := os.Hostname()
+	u, err := uuid.NewV4()
 	if err != nil {
 		log.WithError(err).Error("unable to get hostname")
 		return
 	}
-	server, err := zeroconf.Register(name, "_mercury._tcp", "local.", 9316, nil, nil)
+	server, err := zeroconf.Register(u.String(), "_mercury._tcp", "local.", 9316, nil, nil)
 	if err != nil {
 		log.WithError(err).Error("unable to register zeroconf service")
 		return
@@ -65,21 +80,68 @@ func (pm *PeerManager) Run() {
 		return
 	}
 
-	for entry := range entries {
-		log.Debug(entry)
-		p := &Peer{
-			Port: entry.Port,
+	for {
+		select {
+		case entry := <-entries:
+			pm.handleEntry(entry)
 		}
-		p.Addresses = append(p.Addresses, entry.AddrIPv6...)
-		p.Addresses = append(p.Addresses, entry.AddrIPv4...)
-
-		pm.m.Lock()
-		for _, cb := range pm.callbacks {
-			cb(p)
-		}
-		pm.m.Unlock()
 	}
 }
+
+func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
+	p := &Peer{
+		ID: entry.Instance,
+		Port: entry.Port,
+	}
+	p.Addresses = append(p.Addresses, entry.AddrIPv6...)
+	p.Addresses = append(p.Addresses, entry.AddrIPv4...)
+
+	log.Debugf("new peer: %+v", p)
+
+	pm.m.Lock()
+	defer pm.m.Unlock()
+	if _, ok := pm.peers[p.ID]; ok {
+		// already have this peer
+		log.Debugf("peer %s already known", p.ID)
+		return
+	}
+	pm.peers[p.ID] = p
+}
+
+func (pm *PeerManager) messagesHandler(w http.ResponseWriter, r *http.Request) {
+	msgs, err := pm.s.EncryptedMessages()
+	if err != nil {
+		http.Error(w, "unable to get messages", http.StatusInternalServerError)
+		log.WithError(err).Error("unable to get messages")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(msgs); err != nil {
+		http.Error(w, "unable to encode messages", http.StatusInternalServerError)
+		log.WithError(err).Error("unable to encode messages")
+		return
+	}
+}
+
+func (pm *PeerManager) peersHandler(w http.ResponseWriter, r *http.Request) {
+	var peers []*Peer
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(peers); err != nil {
+		http.Error(w, "unable to decode peers", http.StatusInternalServerError)
+		log.WithError(err).Error("unable to decode peers")
+		return
+	}
+
+	log.Debugf("got peers %+v", peers)
+}
+
+func (pm *PeerManager) notifyHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug("notifyHandler")
+	// pm.notify <- 
+}
+
 
 // func oldpeermanagerstuff() {
 // 	// join multicast group, send broadcast messages, handle incoming messages...

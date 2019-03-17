@@ -21,7 +21,7 @@ function sendMessage() {
 			Message: $("#message").val()
 		})
 	}).then(() => {
-		console.log("dopne")
+		console.log("done")
 	})
 }
 
@@ -33,7 +33,7 @@ $(document).ready(function () {
 	}).then(function (data) {
 		console.log(data);
 		for (var i = 0; i < data.length; i++){
-			$("#unique_id").append("<option value=" + data[i].Name + ">"+data[i].Name +"</option>");
+			$("#unique_id").append("<option value=" + data[i].ID + ">"+data[i].Name +"</option>");
 		}
 	})
 })

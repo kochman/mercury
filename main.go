@@ -48,6 +48,22 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	// messages, _ := store.EncryptedMessages()
+
+	// myKey, _ := KeyPairFromBytes(i.PrivateKey)
+	// for _, m := range messages {
+	// 	ret, err := myKey.UnSign("msg", string(m.Contents))
+
+	// 	if err == nil {
+	// 		dec := DecryptedMessage{
+	// 			ID:       m.ID,
+	// 			Contents: *ret,
+	// 			Sent:     m.Sent,
+	// 		}
+	// 		store.AddDecryptedMessage(&dec)
+	// 	}
+
+	// }
 
 	api := NewAPI(store, box)
 	go api.Run()

@@ -55,7 +55,7 @@
     <div class="columns is-centered">
       <div class="column is-two-thirds">
         <div v-for="message in messages" class="notification">
-          <h1 class="title">From: {{message.Contents.From}}</h1>
+          <h1 class="title">From: {{contactNameByID(message.Contents.From)}}</h1>
           <p style="word-wrap: break-word;">{{message.Contents.Message}}</p>
         </div>
       </div>

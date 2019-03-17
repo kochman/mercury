@@ -30,8 +30,9 @@ $(document).ready(function () {
 	fetch("/api/contacts/all").then(function (response) {
 		return response.json();
 	}).then(function (data) {
+		console.log(data)
 		for (var i = 0; i < data.length; i++){
-			$("#unique_id").append("<option value=" + data[i].ID + ">"+data[i].Name +"</option>");
+			$("#unique_id").append("<option value=" + data[i].Name + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
 		}
 	})
 
@@ -48,7 +49,7 @@ $(document).ready(function () {
 			count++;
 		}
 		result += "...";
-		$("#personal-id").text(result);
+		$("#personal-key").text(result);
 	})
 })
 

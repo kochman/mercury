@@ -21,3 +21,12 @@ func NewMessagesManager(s *Store, pm *PeerManager) *MessagesManager {
 func (mm *MessagesManager) newPeerCallback(peer *Peer) {
 	log.Debugf("newPeerCallback %+v", peer)
 }
+
+
+func (nm *MessagesManager) NewMessage(msg *EncryptedMessage){
+	
+	//encrypt here
+	
+	nm.s.AddEncryptedMessage(msg)
+
+}

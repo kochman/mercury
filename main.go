@@ -43,6 +43,7 @@ func main() {
 			store.SetMyInfo(&myInfo)
 		}
 	}
+
 	i, err = store.MyInfo()
 	if err != nil {
 		fmt.Println(err)

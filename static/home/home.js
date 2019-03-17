@@ -1,4 +1,3 @@
-
 // Function to validate that the message form is not blank 
 function validateForm(){
 	let message = document.getElementById("message").value;
@@ -26,8 +25,7 @@ function sendMessage() {
 		}, 1000)
 	})
 }
-let result ="";
-let full_result="";
+
 // on page load
 // get all available contacts and append 
 // them to the list of possible message receivers
@@ -52,3 +50,7 @@ $(document).ready(function () {
 			$('#unique_id').val($.urlParam('user'))
 		}
 	})
+})
+
+
+

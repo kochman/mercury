@@ -13,14 +13,36 @@ var app = new Vue({
         },
         myPubKey: "",
         myKeyModal: false,
+        myName: "joey",
+        unknownPeers: [],
+
     },
     mounted(){
         this.fetchContacts();
-        fetch("/api/self").then((data)=> data.text()).then((val) => {
+        this.getMyName();
+        fetch("/api/self").then((data) => data.text()).then((val) => {
             this.myPubKey = val;
+        })
+        let el = this;
+
+        fetch("/api/contacts/peers").then(function (response) {
+            return response.json();
+        }).then(function (data) {
+            el.unknownPeers = data;
         })
     },
     methods: {
+        sendMyName(){
+            fetch("/myinfo", {
+                method: "POST",
+                body: JSON.stringify({Name: this.myName})
+            }).then(this.getMyName)
+        },
+        getMyName(){
+            fetch("/myinfo").then((val) => val.json()).then((data) => {
+                this.myName = data.Name
+            })
+        },
         fetchContacts(){
             fetch("/api/contacts/all").then((data) => data.json()).then((val) => {
                 this.contacts = val;
@@ -36,6 +58,7 @@ var app = new Vue({
                 
             }).then((ret) => {
                 this.fetchContacts()
+                this.createModal = false;
             })
         }
     }

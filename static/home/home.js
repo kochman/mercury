@@ -12,7 +12,6 @@ function validateForm(){
 
 // Function to send the message 
 function sendMessage() {
-	console.log($("#unique_id").val())
 	fetch("/send", {
 		method: "POST",
 		body: JSON.stringify({
@@ -20,7 +19,11 @@ function sendMessage() {
 			Message: $("#message").val()
 		})
 	}).then(() => {
-		console.log("done")
+		console.log("here")
+		$("#messagesentinfo").show()
+		setTimeout(()=> {
+			$("#messagesentinfo").hide()
+		}, 1000)
 	})
 }
 let result ="";
@@ -29,37 +32,23 @@ let full_result="";
 // get all available contacts and append 
 // them to the list of possible message receivers
 $(document).ready(function () {
+	$("#messagesentinfo").hide()
 	fetch("/api/contacts/all").then(function (response) {
 		return response.json();
 	}).then(function (data) {
 		for (var i = 0; i < data.length; i++){
-			$("#unique_id").append("<option value=" + data[i].ID + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
+			$("#unique_id").append("<option value=" + data[i].ID + ">" + data[i].Name + " - " + data[i].ID + "</option>");
+			
+		}
+		
+		//parse arguments in the bar
+		// may be used for future url params
+		$.urlParam = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)')
+							.exec(window.location.search);
+			return (results !== null) ? results[1] || 0 : false;
+		}
+		if ($.urlParam('user')) {
+			$('#unique_id').val($.urlParam('user'))
 		}
 	})
-
-	fetch("/api/self").then(function (response) {	
-		return response.text();
-	}).then(function (data) {
-		let count = 0;
-		let i = 26;
-		while (count <= 10){
-			result += data[i];
-			i++;
-			count++;
-		}
-		for (i = 0 ; i < data.length; i++ ){
-			full_result+=data[i];
-		}
-
-		result += "...";
-		$("#personal-key").text(result);
-	})	
-})
-
-$( "#personal-key" ).hover(
-	function() {
-		$( this ).append(full_result);
-	}, function() {
-		$( this ).find($(full_result-result)).remove();
-	}
-);

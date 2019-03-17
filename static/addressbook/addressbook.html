@@ -18,15 +18,9 @@
                 <h2> Mercury </h2>
             </a>
 
-            <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
-                data-target="navbarBasicExample">
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-            </a>
         </div>
 
-        <div id="navbarBasicExample" class="navbar-menu">
+        <div id="navbarBasicExample" class="navbar-menu is-active">
             <div class="navbar-start">
                 <a class="navbar-item" href="/contacts">
                     Contacts
@@ -60,6 +54,17 @@
             <button @click="myKeyModal = true;" class="button is-primary">
                 Show my details
             </button>
+            <p v-if="unknownPeers.length != 0" class="title">
+                New Peers
+            </p>
+            <div v-if="unknownPeers.length != 0" class="list is-hoverable">
+                <a @click="newContact = peer; createModal = true;" v-for="peer in unknownPeers" class="list-item">
+                    {{peer.Name}}
+                </a>
+            </div>
+            <p class="title">
+                Contacts
+            </p>
             <div class="list is-hoverable">
                 <a @click="targetContact = contact; modalActive = true;" v-for="contact in contacts" class="list-item">
                     {{contact.Name}}
@@ -69,7 +74,6 @@
                 <div class="modal-background"></div>
                 <div class="modal-content">
                     <div class="box">
-
                         <p class="title">
                             {{targetContact.Name}}
                         </p>
@@ -130,6 +134,16 @@
                 <div class="modal-background"></div>
                 <div class="modal-content">
                     <div class="box">
+                        <p class="label">Name</p>
+
+                        <div class ="field has-addons">
+                            <div class="control is-expanded">
+                                <input v-model="myName" class="input"></input>
+                            </div>
+                            <div clss="control">
+                                <a @click="sendMyName" class="button is-info">Submit</a>
+                            </div>
+                        </div>
                         <pre class="word-wrap: break-word; white-space: pre-wrap;">{{myPubKey}}</pre>
 
                     </div>
@@ -138,7 +152,14 @@
             </div>
         </div>
     </div>
+
+    <div class="container">
+        <div class="container">
+            <div id="discover"></div>
+        </div>
+    </div>
     <!-- JS FILE -->
+    <script src="/static/libs/jquery.js"></script>
     <script src="/static/addressbook/addressbook.controller.js"></script>
 
 </body>

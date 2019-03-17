@@ -19,6 +19,7 @@ type API struct {
 	box   *packr.Box
 	r     http.Handler
 	store *Store
+	pm *PeerManager
 }
 
 func (a *API) IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +51,17 @@ func (a *API) GetContactsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, ret)
+}
 
+func (a *API) GetPeerContactsHandler(w http.ResponseWriter, r *http.Request) {
+	ret, err := a.pm.NewContacts()
+	if err != nil {
+		http.Error(w, "unable to get peer contacts", http.StatusInternalServerError)
+		log.WithError(err).Error("unable to get peer contacts")
+		return
+	}
+
+	WriteJSON(w, ret)
 }
 
 func (a *API) MessagePageHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +104,7 @@ type FrontendMessage struct {
 }
 
 type EncMessage struct {
-	From    int
+	From    string
 	Message string
 }
 
@@ -104,7 +115,6 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(400)
 		log.WithError(err).Error("Bad Request")
-
 		w.Write([]byte("malformed request"))
 		return
 	}
@@ -148,7 +158,7 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encMSG := EncMessage{
-		From:    me.ID,
+		From:    me.Name,
 		Message: v.Message,
 	}
 
@@ -171,11 +181,58 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewAPI(store *Store, box *packr.Box) *API {
+type GetMyNameValue struct {
+	Name string
+}
 
+func (a *API) GetMyName(w http.ResponseWriter, r *http.Request) {
+	i, err := a.store.MyInfo()
+	if err != nil {
+		w.WriteHeader(500)
+		log.WithError(err)
+		return
+	}
+
+	retVal := &GetMyNameValue{
+		Name: i.Name,
+	}
+
+	WriteJSON(w, retVal)
+}
+
+func (a *API) SetMyName(w http.ResponseWriter, r *http.Request) {
+	v := &GetMyNameValue{}
+	err := json.NewDecoder(r.Body).Decode(v)
+	if err != nil {
+		w.WriteHeader(400)
+		log.WithError(err).Error("Bad Request")
+
+		w.Write([]byte("Bad request"))
+		return
+	}
+
+	i, err := a.store.MyInfo()
+	if err != nil {
+		w.WriteHeader(500)
+		log.WithError(err)
+		return
+	}
+	i.Name = v.Name
+	log.Info(v.Name)
+	err = a.store.SetMyInfo(i)
+	if err != nil {
+		log.WithError(err)
+		w.WriteHeader(500)
+		return
+	}
+
+}
+
+func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
 	a := &API{
 		box:   box,
 		store: store,
+		pm: pm,
 	}
 	// gets users own info
 	i, _ := store.MyInfo()
@@ -184,24 +241,6 @@ func NewAPI(store *Store, box *packr.Box) *API {
 
 	r.Use(middleware.DefaultCompress)
 
-	// MOCK DATA
-	// TO DELETE
-
-	msg := &EncryptedMessage{
-		ID:       "1",
-		Sent:     time.Now(),
-		Contents: []byte("test"),
-	}
-	msg2 := &EncryptedMessage{
-		ID:       "2",
-		Sent:     time.Now(),
-		Contents: []byte("test"),
-	}
-
-	store.AddEncryptedMessage(msg)
-	store.AddEncryptedMessage(msg2)
-
-	//DELETE ABOVE MOCK DATA
 
 	r.Method("GET", "/static/*", http.FileServer(box))
 
@@ -238,11 +277,15 @@ func NewAPI(store *Store, box *packr.Box) *API {
 		r.Route("/contacts", func(r chi.Router) {
 			r.Get("/all", a.GetContactsHandler)
 			r.Post("/create", a.CreateContactHandler)
+			r.Get("/peers", a.GetPeerContactsHandler)
 		})
 	})
 
 	//DO POST REQUEST HERE FOR SENDING MESSAGES
 	r.Post("/send", a.SendMessage)
+
+	r.Get("/myinfo", a.GetMyName)
+	r.Post("/myinfo", a.SetMyName)
 
 	// listen
 	r.Get("/", a.IndexHandler)
@@ -258,7 +301,10 @@ func NewAPI(store *Store, box *packr.Box) *API {
 }
 
 func (a *API) Run() {
-	http.ListenAndServe(":3000", a.r)
+	err := http.ListenAndServe(":3000", a.r)
+	if err != nil {
+		log.WithError(err).Error("unable to listen and serve")
+	}
 }
 
 // WriteJSON writes the data as JSON.

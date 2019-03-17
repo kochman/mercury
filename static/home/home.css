@@ -8,7 +8,8 @@ html,body{
 
 .container{
 	  top:100px;
-   	text-align:left;
+		text-align:center;
+		justify-content:center;
   	width:800px;
   	height:800px;
   	font-family: "Roboto Slab", serif;
@@ -17,9 +18,6 @@ html,body{
 }
 
 .title{
-	 text-align:center;
-}
-#button{
 	 text-align:center;
 }
 

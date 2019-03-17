@@ -90,8 +90,8 @@ func (s *Store) MyInfo() (*MyInfo, error) {
 // Messages
 
 type EncryptedMessage struct {
-	ID string
-	Sent time.Time
+	ID       string
+	Sent     time.Time
 	Contents []byte
 }
 
@@ -106,8 +106,8 @@ func (s *Store) AddEncryptedMessage(msg *EncryptedMessage) error {
 }
 
 type DecryptedMessage struct {
-	ID []byte
-	Sent time.Time
+	ID       string
+	Sent     time.Time
 	Contents string
 }
 
@@ -121,3 +121,25 @@ func (s *Store) AddDecryptedMessage(msg *DecryptedMessage) error {
 	return s.db.Save(msg)
 }
 
+// return all messages IDs that have been saved so we don't have to process them again
+func (s *Store) ProcessedMessageIDs() (map[string]struct{}, error) {
+	emsgs, err := s.EncryptedMessages()
+	if err != nil {
+		return nil, err
+	}
+
+	dmsgs, err := s.DecryptedMessages()
+	if err != nil {
+		return nil, err
+	}
+
+	ids := map[string]struct{}{}
+	for _, msg := range emsgs {
+		ids[msg.ID] = struct{}{}
+	}
+	for _, msg := range dmsgs {
+		ids[msg.ID] = struct{}{}
+	}
+
+	return ids, nil
+}

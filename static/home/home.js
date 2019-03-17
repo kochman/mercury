@@ -23,18 +23,19 @@ function sendMessage() {
 	}).then(() => {
 		console.log("dopne")
 	})
-	// $.ajax({
-	// 	url: "localhost:3000",
-	// 	method: "POST",
-	// 	data: {
-	// 		TargetUserID: $("#unique_id").val(),
-	// 		Message: $("#message").val()
-	// 	},
-	// 	success: function (result) {
-	// 		console.log("success")
-	// 		console.log(result)
-	// 	}
-	// })
 }
+
+$(document).ready(function () {
+	console.log("loaded")
+
+	fetch("/api/contacts/all").then(function (response) {
+		return response.json();
+	}).then(function (data) {
+		console.log(data);
+		for (var i = 0; i < data.length; i++){
+			$("#unique_id").append("<option value=" + data[i].Name + ">"+data[i].Name +"</option>");
+		}
+	})
+})
 
 

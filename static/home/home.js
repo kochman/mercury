@@ -1,3 +1,4 @@
+
 // Function to validate that the message form is not blank 
 function validateForm(){
 	let message = document.getElementById("message").value;
@@ -22,7 +23,8 @@ function sendMessage() {
 		console.log("done")
 	})
 }
-
+let result ="";
+let full_result="";
 // on page load
 // get all available contacts and append 
 // them to the list of possible message receivers
@@ -38,7 +40,6 @@ $(document).ready(function () {
 	fetch("/api/self").then(function (response) {	
 		return response.text();
 	}).then(function (data) {
-		let result = "";
 		let count = 0;
 		let i = 26;
 		while (count <= 10){
@@ -46,7 +47,19 @@ $(document).ready(function () {
 			i++;
 			count++;
 		}
+		for (i = 0 ; i < data.length; i++ ){
+			full_result+=data[i];
+		}
+
 		result += "...";
 		$("#personal-key").text(result);
-	})
+	})	
 })
+
+$( "#personal-key" ).hover(
+	function() {
+		$( this ).append(full_result);
+	}, function() {
+		$( this ).find($(full_result-result)).remove();
+	}
+);

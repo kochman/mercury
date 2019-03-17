@@ -54,9 +54,10 @@
   <div class="container" id="app">
     <div class="columns is-centered">
       <div class="column is-two-thirds">
-        <div v-for="message in messages" class="notification">
+        <div v-for="message in msgArr" class="notification">
           <h1 class="title">From: {{contactNameByID(message.Contents.From)}}</h1>
           <p style="word-wrap: break-word;">{{message.Contents.Message}}</p>
+          {{message.Sent}}
         </div>
       </div>
     </div>

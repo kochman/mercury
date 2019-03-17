@@ -90,8 +90,8 @@ func (s *Store) MyInfo() (*MyInfo, error) {
 // Messages
 
 type EncryptedMessage struct {
-	ID string
-	Sent time.Time
+	ID       string
+	Sent     time.Time
 	Contents []byte
 }
 
@@ -106,8 +106,8 @@ func (s *Store) AddEncryptedMessage(msg *EncryptedMessage) error {
 }
 
 type DecryptedMessage struct {
-	ID string
-	Sent time.Time
+	ID       string
+	Sent     time.Time
 	Contents string
 }
 

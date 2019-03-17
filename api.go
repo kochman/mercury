@@ -10,10 +10,9 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/gofrs/uuid"
 	"github.com/gobuffalo/packr/v2"
+	"github.com/gofrs/uuid"
 	log "github.com/sirupsen/logrus"
-
 )
 
 type API struct {
@@ -54,6 +53,17 @@ func (a *API) GetContactsHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (a *API) MessagePageHandler(w http.ResponseWriter, r *http.Request) {
+	s, err := a.box.Find("static/messages/messages.html")
+	w.Header().Set("content-type", "text/html")
+	if err != nil {
+		w.WriteHeader(404)
+		return
+	}
+	w.Write(s)
+
+}
+
 func (a *API) CreateContactHandler(w http.ResponseWriter, r *http.Request) {
 	v := &Contact{}
 	err := json.NewDecoder(r.Body).Decode(v)
@@ -80,6 +90,11 @@ func (a *API) CreateContactHandler(w http.ResponseWriter, r *http.Request) {
 type FrontendMessage struct {
 	TargetUserID int
 	Message      string
+}
+
+type EncMessage struct {
+	From    int
+	Message string
 }
 
 func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +139,22 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-	content, err := keyPair.Sign("msg", v.Message)
+
+	me, err := a.store.MyInfo()
+	if err != nil {
+		w.Write([]byte("Unable to get my id"))
+		w.WriteHeader(500)
+		return
+	}
+
+	encMSG := EncMessage{
+		From:    me.ID,
+		Message: v.Message,
+	}
+
+	jsonMSG, _ := json.Marshal(encMSG)
+	log.Info("Sending message", string(jsonMSG))
+	content, err := keyPair.Sign("msg", string(jsonMSG))
 	if err != nil {
 		w.Write([]byte("unable to sign message"))
 		w.WriteHeader(500)
@@ -137,12 +167,7 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Contents: []byte(*content),
 	}
 
-	// fmt.Println("type of ", reflect.TypeOf(u2))
-	// nm.NewMessage(msg)
 	a.store.AddEncryptedMessage(msg)
-	//prints to web page
-	// fmt.Fprintln(w,v)
-	fmt.Fprintln(w, msg)
 
 }
 
@@ -163,14 +188,14 @@ func NewAPI(store *Store, box *packr.Box) *API {
 	// TO DELETE
 
 	msg := &EncryptedMessage{
-		ID:			"1",
-		Sent:		time.Now(),
-		Contents:	[]byte("test"),
+		ID:       "1",
+		Sent:     time.Now(),
+		Contents: []byte("test"),
 	}
 	msg2 := &EncryptedMessage{
-		ID:			"2",
-		Sent:		time.Now(),
-		Contents:	[]byte("test"),
+		ID:       "2",
+		Sent:     time.Now(),
+		Contents: []byte("test"),
 	}
 
 	store.AddEncryptedMessage(msg)
@@ -198,7 +223,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 			w.Header().Set("Content-Type", "application/json")
 
 			// get all the decrypted messages this person has
-			a, _ := store.EncryptedMessages()
+			a, _ := store.DecryptedMessages()
 
 			// spacing out the json data
 			output, err := json.MarshalIndent(a, "", " ")
@@ -221,6 +246,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 
 	// listen
 	r.Get("/", a.IndexHandler)
+	r.Get("/messages", a.MessagePageHandler)
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", a.AddressBookHandler)
 

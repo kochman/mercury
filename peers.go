@@ -71,6 +71,8 @@ func (pm *PeerManager) Run() {
 	pm.myUUID = u.String()
 
 	go func() {
+		// wait a sec for our server to start
+		<-time.After(time.Second)
 		for {
 			server, err := zeroconf.Register(pm.myUUID, "_mercury._tcp", "local.", port, nil, nil)
 			if err != nil {

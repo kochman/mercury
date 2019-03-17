@@ -5,15 +5,16 @@ import (
 	"net"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"sync"
+	"time"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
     "github.com/go-chi/chi"
 	"github.com/grandcat/zeroconf"
 	"github.com/gofrs/uuid"
 )
-
-const MulticastGroupAddr = "[ff12::9316]:9316"
 
 type PeerManager struct {
 	s *Store
@@ -38,7 +39,6 @@ func NewPeerManager(s *Store) *PeerManager {
 	r := chi.NewRouter()
 	r.Get("/messages", pm.messagesHandler)
 	r.Get("/peers", pm.peersHandler)
-	// r.Post("/peers", pm.addPeersHandler)
 	r.Post("/notify", pm.notifyHandler)
 	pm.handler = r
 
@@ -48,8 +48,16 @@ func NewPeerManager(s *Store) *PeerManager {
 func (pm *PeerManager) Run() {
 	log.Debug("PeerManager run")
 
+	// set up our own listener so we can figure out what port we get
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		log.WithError(err).Error("unable to create listener")
+		return
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	log.Debugf("PeerManager listening at %s", listener.Addr())
 	go func() {
-		err := http.ListenAndServe(":3001", pm.handler)
+		err := http.Serve(listener, pm.handler)
 		log.WithError(err).Error("PeerManager unable to listen and serve")
 	}()
 
@@ -59,7 +67,7 @@ func (pm *PeerManager) Run() {
 		log.WithError(err).Error("unable to get hostname")
 		return
 	}
-	server, err := zeroconf.Register(u.String(), "_mercury._tcp", "local.", 9316, nil, nil)
+	server, err := zeroconf.Register(u.String(), "_mercury._tcp", "local.", port, nil, nil)
 	if err != nil {
 		log.WithError(err).Error("unable to register zeroconf service")
 		return
@@ -80,10 +88,13 @@ func (pm *PeerManager) Run() {
 		return
 	}
 
+	ticker := time.Tick(time.Second * 5)
 	for {
 		select {
 		case entry := <-entries:
 			pm.handleEntry(entry)
+		case <- ticker:
+			pm.fetchMessages()
 		}
 	}
 }
@@ -126,20 +137,135 @@ func (pm *PeerManager) messagesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pm *PeerManager) peersHandler(w http.ResponseWriter, r *http.Request) {
-	var peers []*Peer
-	dec := json.NewDecoder(r.Body)
-	if err := dec.Decode(peers); err != nil {
-		http.Error(w, "unable to decode peers", http.StatusInternalServerError)
-		log.WithError(err).Error("unable to decode peers")
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	pm.m.Lock()
+	defer pm.m.Unlock()
+	if err := enc.Encode(pm.peers); err != nil {
+		http.Error(w, "unable to encode peers", http.StatusInternalServerError)
+		log.WithError(err).Error("unable to encode peers")
 		return
 	}
 
-	log.Debugf("got peers %+v", peers)
+	// dec := json.NewDecoder(r.Body)
+	// if err := dec.Decode(&peers); err != nil {
+	// 	http.Error(w, "unable to decode peers", http.StatusInternalServerError)
+	// 	log.WithError(err).Error("unable to decode peers")
+	// 	return
+	// }
+
+	// log.Debugf("got peers %+v", peers)
 }
 
 func (pm *PeerManager) notifyHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("notifyHandler")
+
+
 	// pm.notify <- 
+}
+
+func (pm *PeerManager) fetchMessages() {
+	c := http.Client{
+		Timeout: time.Second * 5,
+	}
+
+	pm.m.Lock()
+	defer pm.m.Unlock()
+	for peerID, peer := range pm.peers {
+		// try all addrs
+		retrieved := false
+		for _, addr := range peer.Addresses {
+			endpoint := url.URL{
+				Scheme: "http",
+				Path: "/messages",
+			}
+
+			// what kind of address is it?
+			if addr.To4() != nil {
+				endpoint.Host = addr.String() + ":" + strconv.Itoa(peer.Port)
+			} else if addr.To16() != nil {
+				// idk if this is right but whatever
+				endpoint.Host = "[" + addr.String() + "]:" + strconv.Itoa(peer.Port)
+			} else {
+				continue
+			}
+
+			req, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)
+			if err != nil {
+				// log.WithError(err).Error("unable to create request")
+				continue
+			}
+			resp, err := c.Do(req)
+			if err != nil {
+				// log.WithError(err).Error("unable to get response")
+				continue
+			}
+			retrieved = true
+
+			// parse messages
+			dec := json.NewDecoder(resp.Body)
+			var msgs []*EncryptedMessage
+			err = dec.Decode(&msgs)
+			if err != nil {
+				log.WithError(err).Error("unable to decode messages")
+				continue
+			}
+			pm.handleMessages(msgs)
+
+			log.Debugf("got messages from peer %s", peerID)
+			break
+		}
+		if !retrieved {
+			// remove this peer since we can't reach it
+			delete(pm.peers, peerID)
+			log.Debugf("removed dead peer %s", peerID)
+		}
+	}
+}
+
+func (pm *PeerManager) handleMessages(msgs []*EncryptedMessage) {
+	// get our key
+	i, err := pm.s.MyInfo()
+	if err != nil {
+		log.WithError(err).Error("unable to get my key")
+		return
+	}
+	myKey, _ := KeyPairFromBytes(i.PrivateKey)
+
+	msgIDs, err := pm.s.ProcessedMessageIDs()
+	if err != nil {
+		log.WithError(err).Error("unable to get processed message IDs")
+		return
+	}
+
+	for _, msg := range msgs {
+		if _, ok := msgIDs[msg.ID]; ok {
+			continue
+		}
+		ret, err := myKey.UnSign("msg", string(msg.Contents))
+		if err != nil {
+			// not for us
+			err := pm.s.AddEncryptedMessage(msg)
+			if err != nil {
+				log.WithError(err).Error("unable to create encrypted message")
+				continue
+			}
+			log.Debug("added message for other peer")
+		} else {
+			// this is for us
+			dmsg := &DecryptedMessage{
+				ID: msg.ID,
+				Sent: msg.Sent,
+				Contents: *ret,
+			} 
+			err := pm.s.AddDecryptedMessage(dmsg)
+			if err != nil {
+				log.WithError(err).Error("unable to create decrypted message")
+				continue
+			}
+			log.Debug("added message for us")
+		}
+	}
 }
 
 

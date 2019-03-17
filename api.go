@@ -104,7 +104,7 @@ type FrontendMessage struct {
 }
 
 type EncMessage struct {
-	From    int
+	From    string
 	Message string
 }
 
@@ -115,7 +115,6 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(400)
 		log.WithError(err).Error("Bad Request")
-
 		w.Write([]byte("malformed request"))
 		return
 	}
@@ -159,7 +158,7 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encMSG := EncMessage{
-		From:    me.ID,
+		From:    me.Name,
 		Message: v.Message,
 	}
 
@@ -182,8 +181,54 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
+type GetMyNameValue struct {
+	Name string
+}
 
+func (a *API) GetMyName(w http.ResponseWriter, r *http.Request) {
+	i, err := a.store.MyInfo()
+	if err != nil {
+		w.WriteHeader(500)
+		log.WithError(err)
+		return
+	}
+
+	retVal := &GetMyNameValue{
+		Name: i.Name,
+	}
+
+	WriteJSON(w, retVal)
+}
+
+func (a *API) SetMyName(w http.ResponseWriter, r *http.Request) {
+	v := &GetMyNameValue{}
+	err := json.NewDecoder(r.Body).Decode(v)
+	if err != nil {
+		w.WriteHeader(400)
+		log.WithError(err).Error("Bad Request")
+
+		w.Write([]byte("Bad request"))
+		return
+	}
+
+	i, err := a.store.MyInfo()
+	if err != nil {
+		w.WriteHeader(500)
+		log.WithError(err)
+		return
+	}
+	i.Name = v.Name
+	log.Info(v.Name)
+	err = a.store.SetMyInfo(i)
+	if err != nil {
+		log.WithError(err)
+		w.WriteHeader(500)
+		return
+	}
+
+}
+
+func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
 	a := &API{
 		box:   box,
 		store: store,
@@ -256,6 +301,9 @@ func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
 
 	//DO POST REQUEST HERE FOR SENDING MESSAGES
 	r.Post("/send", a.SendMessage)
+
+	r.Get("/myinfo", a.GetMyName)
+	r.Post("/myinfo", a.SetMyName)
 
 	// listen
 	r.Get("/", a.IndexHandler)

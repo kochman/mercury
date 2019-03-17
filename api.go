@@ -2,19 +2,25 @@ package main
 
 import (
 	"net/http"
+	"time"
+
+	// "reflect"
 
 	"github.com/gobuffalo/packr/v2"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/gofrs/uuid"
 )
 
 type API struct {
 	box   *packr.Box
+	r     http.Handler
 	store *Store
 }
 
@@ -72,9 +78,9 @@ func (a *API) CreateContactHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func CreateRoutes(store *Store, box *packr.Box) {
+func NewAPI(store *Store, box *packr.Box) *API {
 
-	a := API{
+	a := &API{
 		box:   box,
 		store: store,
 	}
@@ -86,7 +92,7 @@ func CreateRoutes(store *Store, box *packr.Box) {
 	r.Use(middleware.DefaultCompress)
 
 	r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
 
 		//create the pem object to perform encoding
 		block := &pem.Block{
@@ -98,24 +104,110 @@ func CreateRoutes(store *Store, box *packr.Box) {
 		w.Write(pem.EncodeToMemory(block))
 	})
 
+	// MOCK DATA
+	// TO DELETE
+
+	msg := &EncryptedMessage{
+
+		ID:       []byte("1"),
+		Sent:     time.Now(),
+		Contents: []byte("test"),
+	}
+	msg2 := &EncryptedMessage{
+
+		ID:       []byte("2"),
+		Sent:     time.Now(),
+		Contents: []byte("test"),
+	}
+
+	store.AddEncryptedMessage(msg)
+	store.AddEncryptedMessage(msg2)
+
+	//DELETE ABOVE MOCK DATA
+
 	r.Method("GET", "/static/*", http.FileServer(box))
 
-	//parse through messages that pertain to certain user
-	r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("your messages go here"))
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/plain")
+
+			//create the pem object to perform encoding
+			block := &pem.Block{
+				Type:  "MESSAGE",
+				Bytes: []byte(i.PublicKey),
+			}
+
+			// writes human readable public key to page
+			w.Write(pem.EncodeToMemory(block))
+		})
+		// display messages that user has in decrypted store
+		r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+
+			// get all the decrypted messages this person has
+			a, _ := store.EncryptedMessages()
+
+			// spacing out the json data
+			output, err := json.MarshalIndent(a, "", " ")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			//write the output to the page
+			w.Write(output)
+		})
+		r.Route("/contacts", func(r chi.Router) {
+			r.Get("/all", a.GetContactsHandler)
+			r.Post("/create", a.CreateContactHandler)
+		})
+	})
+
+	//DO POST REQUEST HERE FOR SENDING MESSAGES
+	r.Post("/send", func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			// panic(err)
+		}
+		// v := r.Form.Get("to")
+		to := r.Form.Get("message")
+
+		u2, err := uuid.NewV4()
+		if err != nil {
+			// fmt.Fatalf("failed to generate UUID: %v", err)
+		}
+		fmt.Printf("generated Version 4 UUID %v", u2)
+
+		msg := &EncryptedMessage{
+			ID:       []byte(u2.String()),
+			Sent:     time.Now(),
+			Contents: []byte(to),
+		}
+
+		// fmt.Println("type of ", reflect.TypeOf(u2))
+		// nm.NewMessage(msg)
+		store.AddEncryptedMessage(msg)
+		//prints to web page
+		// fmt.Fprintln(w,v)
+		fmt.Fprintln(w, to)
+
 	})
 
 	// listen
 	r.Get("/", a.IndexHandler)
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", a.AddressBookHandler)
-		r.Get("/all", a.GetContactsHandler)
-		r.Post("/create", a.CreateContactHandler)
+
 
 	})
 
-	http.ListenAndServe(":3000", r)
+	a.r = r
 
+	return a
+}
+
+func (a *API) Run() {
+	http.ListenAndServe(":3000", a.r)
 }
 
 // WriteJSON writes the data as JSON.

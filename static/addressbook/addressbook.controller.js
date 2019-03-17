@@ -16,18 +16,18 @@ var app = new Vue({
     },
     mounted(){
         this.fetchContacts();
-        fetch("/self").then((data)=> data.text()).then((val) => {
+        fetch("/api/self").then((data)=> data.text()).then((val) => {
             this.myPubKey = val;
         })
     },
     methods: {
         fetchContacts(){
-            fetch("/contacts/all").then((data) => data.json()).then((val) => {
+            fetch("/api/contacts/all").then((data) => data.json()).then((val) => {
                 this.contacts = val;
             });
         },
         createNewContact(){
-            fetch("/contacts/create", {
+            fetch("/api/contacts/create", {
                 method: "POST",
                 body: JSON.stringify(this.newContact),
                 

@@ -32,7 +32,7 @@ $(document).ready(function () {
 	}).then(function (data) {
 		console.log(data)
 		for (var i = 0; i < data.length; i++){
-			$("#unique_id").append("<option value=" + data[i].Name + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
+			$("#unique_id").append("<option value=" + data[i].ID + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
 		}
 	})
 

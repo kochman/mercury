@@ -3,6 +3,7 @@
 html,body{
 	margin:0;
 	height:100%;
+  overflow:hidden;
 }
 
 .container{
@@ -12,7 +13,6 @@ html,body{
   	height:800px;
   	font-family: "Roboto Slab", serif;
   	font-size:70px;
-  	background-color:white;
 }
 
 .title{
@@ -20,4 +20,9 @@ html,body{
 }
 #button{
 	 text-align:center;
+}
+
+#nav-bar{
+  font-family: "Roboto Slab", serif;
+
 }

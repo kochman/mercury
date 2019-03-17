@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"net"
 	"encoding/json"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
     "github.com/go-chi/chi"
 	"github.com/grandcat/zeroconf"
+	"github.com/gofrs/uuid"
 )
 
 const MulticastGroupAddr = "[ff12::9316]:9316"
@@ -54,12 +54,12 @@ func (pm *PeerManager) Run() {
 	}()
 
 	// register us
-	name, err := os.Hostname()
+	u, err := uuid.NewV4()
 	if err != nil {
 		log.WithError(err).Error("unable to get hostname")
 		return
 	}
-	server, err := zeroconf.Register(name, "_mercury._tcp", "local.", 9316, nil, nil)
+	server, err := zeroconf.Register(u.String(), "_mercury._tcp", "local.", 9316, nil, nil)
 	if err != nil {
 		log.WithError(err).Error("unable to register zeroconf service")
 		return

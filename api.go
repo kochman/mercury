@@ -4,11 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	// "reflect"
-
-	"github.com/gobuffalo/packr/v2"
-	log "github.com/sirupsen/logrus"
-
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -16,6 +11,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/gofrs/uuid"
+	"github.com/gobuffalo/packr/v2"
+	log "github.com/sirupsen/logrus"
+
 )
 
 type API struct {

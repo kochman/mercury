@@ -71,13 +71,14 @@ func (pm *PeerManager) Run() {
 	pm.myUUID = u.String()
 
 	go func() {
+		// wait a sec for our server to start
 		for {
 			server, err := zeroconf.Register(pm.myUUID, "_mercury._tcp", "local.", port, nil, nil)
 			if err != nil {
 				log.WithError(err).Error("unable to register zeroconf service")
 				continue
 			}
-			<-time.After(time.Second*10)
+			<-time.After(time.Second*5)
 			server.Shutdown()
 		}
 	}()
@@ -96,7 +97,7 @@ func (pm *PeerManager) Run() {
 		return
 	}
 
-	ticker := time.Tick(time.Second * 5)
+	ticker := time.Tick(time.Second * 1)
 	for {
 		select {
 		case entry := <-entries:
@@ -119,8 +120,6 @@ func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 	p.Addresses = append(p.Addresses, entry.AddrIPv6...)
 	p.Addresses = append(p.Addresses, entry.AddrIPv4...)
 
-	log.Debugf("new peer: %+v", p)
-
 	pm.m.Lock()
 	defer pm.m.Unlock()
 	if _, ok := pm.peers[p.ID]; ok {
@@ -128,6 +127,8 @@ func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 		log.Debugf("peer %s already known", p.ID)
 		return
 	}
+
+	log.Debugf("new peer: %+v", p)
 	pm.peers[p.ID] = p
 }
 

@@ -26,6 +26,7 @@ type API struct {
 
 func (a *API) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	s, err := a.box.Find("static/home/home.html")
+	w.Header().Set("content-type", "text/html")
 	if err != nil {
 		w.WriteHeader(404)
 		return
@@ -59,11 +60,11 @@ func (a *API) CreateContactHandler(w http.ResponseWriter, r *http.Request) {
 	v := &Contact{}
 	err := json.NewDecoder(r.Body).Decode(v)
 	if v.Name == "" {
-		w.WriteHeader(403)
+		w.WriteHeader(400)
 		w.Write([]byte("Bad Request"))
 	}
 	if err != nil {
-		w.WriteHeader(403)
+		w.WriteHeader(400)
 		log.Error("Bad Request")
 		w.Write([]byte("Bad request"))
 		return
@@ -86,8 +87,11 @@ type FrontendMessage struct {
 func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	v := &FrontendMessage{}
 	err := json.NewDecoder(r.Body).Decode(v)
+
 	if err != nil {
-		w.WriteHeader(403)
+		w.WriteHeader(400)
+		log.WithError(err).Error("Bad Request")
+
 		w.Write([]byte("malformed request"))
 		return
 	}
@@ -186,7 +190,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 
 			//create the pem object to perform encoding
 			block := &pem.Block{
-				Type:  "MESSAGE",
+				Type:  "PUBLIC KEY",
 				Bytes: []byte(i.PublicKey),
 			}
 

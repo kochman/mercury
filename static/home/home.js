@@ -13,19 +13,28 @@ function validateForm(){
 
 // Function to send the message 
 function sendMessage() {
-	
-	$.ajax({
-		url: "localhost:3000",
+	console.log($("#unique_id").val())
+	fetch("/send", {
 		method: "POST",
-		data: {
-			TargetUserID: $("#unique_id").val(),
+		body: JSON.stringify({
+			TargetUserID: Number($("#unique_id").val()),
 			Message: $("#message").val()
-		},
-		success: function (result) {
-			console.log("success")
-			console.log(result)
-		}
+		})
+	}).then(() => {
+		console.log("dopne")
 	})
+	// $.ajax({
+	// 	url: "localhost:3000",
+	// 	method: "POST",
+	// 	data: {
+	// 		TargetUserID: $("#unique_id").val(),
+	// 		Message: $("#message").val()
+	// 	},
+	// 	success: function (result) {
+	// 		console.log("success")
+	// 		console.log(result)
+	// 	}
+	// })
 }
 
 

@@ -1,76 +1,77 @@
-<!DOCTYPE html>
 <html lang="en-US">
 
 <head>
 	<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="./home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="/static/home/home.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 	<title>Mercury</title>
 </head>
 
 <body>
 
-<div id="nav-bar">
-  <!-- Navbar (sit on top) -->
-  <div class="w3-top">
-    <div class="w3-bar w3-white w3-wide w3-padding w3-card">
-      <a href="../home/home.html" class="w3-bar-item w3-button"><b>Mercury</b></a>
-      <!-- Float links to the right. Hide them on small screens -->
-      <div class="w3-right w3-hide-small">
-        <a href="address.html" class="w3-bar-item w3-button">Address Book</a>
-        <a href="messages.html" class="w3-bar-item w3-button">Messages</a>
-        <a href="../about/about.html" class="w3-bar-item w3-button">About</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="container">
-	<h1 style="font-size:65px;text-align:center;position:relative;top:50px"> Send A Message </h1>
-	<!-- Send form -->
-	<div class="section">
-	<p>
-		<h2> To: </h2>
-		<div class="field is-horizontal">
-  			<div class="field-body">
-    			<div class="field is-narrow">
-      				<div class="control">
-        				<div class="select is-fullwidth">
-          				<select id="unique_id">
-            				<option>Address 1</option>
-            				<option>Address 2</option>
-            				<option>Address 3</option>
-          				</select>
-        				</div>
-      				</div>
-    			</div>
-  			</div>
+	<div id="nav-bar">
+		<!-- Navbar (sit on top) -->
+		<div class="w3-top">
+			<div class="w3-bar w3-white w3-wide w3-padding w3-card">
+				<a href="../home/home.html" class="w3-bar-item w3-button"><b>Mercury</b></a>
+				<!-- Float links to the right. Hide them on small screens -->
+				<div class="w3-right w3-hide-small">
+					<a href="address.html" class="w3-bar-item w3-button">Address Book</a>
+					<a href="messages.html" class="w3-bar-item w3-button">Messages</a>
+					<a href="../about/about.html" class="w3-bar-item w3-button">About</a>
+				</div>
+			</div>
 		</div>
-	</p>
-	</div>
-    
-	<!-- Message form -->
-	<div class="section">
-		<h2 id="sub-title-message">Message:<br> 
-		<div class="field-body">
-    		<div class="field">
-      			<div class="control">
-        			<textarea id="message" name="message" class="textarea" form="form" placeholder="What do you want to say?"></textarea>
-      			</div>
-    		</div>
-  		</div>
 	</div>
 
-	<!-- Submit Button  -->
-	<div id="button" >
-		<button class="button is-info is-outlined" onclick="validateForm()">Submit</button>
-	</div>
-</div>
+	<div class="container">
+		<h1 style="font-size:65px;text-align:center;position:relative;top:50px"> Send A Message </h1>
+		<!-- Send form -->
+		<div class="section">
+			<p>
+				<h2> To: </h2>
+				<div class="field is-horizontal">
+					<div class="field-body">
+						<div class="field is-narrow">
+							<div class="control">
+								<div class="select is-fullwidth">
+									<select id="unique_id">
+										<option value=1>Address 1</option>
+										<option value=2>Address 2</option>
+										<option value=3>Address 3</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</p>
+		</div>
 
-<!-- JS FILE --> 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="home.js"></script>
+		<!-- Message form -->
+		<div class="section">
+			<h2 id="sub-title-message">Message:<br>
+				<div class="field-body">
+					<div class="field">
+						<div class="control">
+							<textarea id="message" name="message" class="textarea" form="form"
+								placeholder="What do you want to say?"></textarea>
+						</div>
+					</div>
+				</div>
+		</div>
+
+		<!-- Submit Button  -->
+		<div id="button">
+			<button class="button is-info is-outlined" onclick="validateForm()">Submit</button>
+		</div>
+	</div>
+
+	<!-- JS FILE -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="/static/home/home.js"></script>
 </body>
+
 </html>

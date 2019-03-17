@@ -19,8 +19,14 @@ var app = new Vue({
     mounted(){
         this.fetchContacts();
         this.getMyName();
-        fetch("/api/self").then((data)=> data.text()).then((val) => {
+        fetch("/api/self").then((data) => data.text()).then((val) => {
             this.myPubKey = val;
+        })
+
+        fetch("/api/contacts/peers").then(function (response) {
+            return response.json();
+        }).then(function (data) {
+            return data;
         })
     },
     methods: {

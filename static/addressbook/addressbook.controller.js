@@ -26,6 +26,9 @@ var app = new Vue({
                 this.contacts = val;
             });
         },
+        sendToUser(contact){
+            window.location = "/?user=" + String(contact.ID);
+        },  
         createNewContact(){
             fetch("/api/contacts/create", {
                 method: "POST",

@@ -43,6 +43,12 @@
                         </p>
                         <p>Public Key:</p>
                         <pre style="white-space: pre-wrap; word-wrap: break-word;">{{targetContact.PublicKey}}</pre>
+                        <div class="field">
+                            <button @click="sendToUser(targetContact)" class="button is-info">
+                                Send message
+                            </button>
+                        </div>
+
                     </div>
                 </div>
                 <button @click="modalActive=false;" class="modal-close is-large" aria-label="close"></button>

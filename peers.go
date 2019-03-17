@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 	"strconv"
+	"bytes"
 	// "encoding/pem"
 
 	log "github.com/sirupsen/logrus"
@@ -21,6 +22,7 @@ type PeerManager struct {
 	s *Store
 	handler http.Handler
 	myUUID string
+	myPeer *Peer
 	m *sync.Mutex
 	peers map[string]*Peer
 }
@@ -99,6 +101,42 @@ func (pm *PeerManager) Run() {
 		return
 	}
 
+	globalEntries := make(chan *Peer)
+	go func() {
+		c := http.Client{
+			Timeout: 5 * time.Second,
+		}
+		ticker := time.Tick(time.Second * 5)
+		for range ticker {
+			pm.m.Lock()
+			if pm.myPeer == nil {
+				continue
+			}
+			b, err := json.Marshal(pm.myPeer)
+			pm.m.Unlock()
+			if err != nil {
+				log.WithError(err).Error("unable to marshal")
+				continue
+			}
+			resp, err := c.Post("http://discovery.getmercury.org/notify", "application/json", bytes.NewBuffer(b))
+			if err != nil {
+				log.WithError(err).Error("unable to post")
+				continue
+			}
+
+			peers := []*Peer{}
+			dec := json.NewDecoder(resp.Body)
+			err = dec.Decode(&peers)
+			if err != nil {
+				log.WithError(err).Error("unable to decode peers")
+				continue
+			}
+			for _, peer := range peers {
+				globalEntries <- peer
+			}
+		}
+	}()
+
 	ticker := time.Tick(time.Second * 1)
 	for {
 		select {
@@ -106,6 +144,8 @@ func (pm *PeerManager) Run() {
 			pm.handleEntry(entry)
 		case <- ticker:
 			pm.fetchMessages()
+		case entry := <-globalEntries:
+			pm.handleGlobalEntry(entry)
 		}
 	}
 }
@@ -120,7 +160,6 @@ func (pm *PeerManager) NewContacts() ([]*Contact, error) {
 		}
 		added, err := pm.s.PublicKeyAdded(peer.Contact.PublicKey)
 		if err != nil {
-			log.Error("HERE")
 			return contacts, err
 		}
 		if added {
@@ -133,6 +172,14 @@ func (pm *PeerManager) NewContacts() ([]*Contact, error) {
 
 func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 	if entry.Instance == pm.myUUID {
+		pm.m.Lock()
+		pm.myPeer = &Peer{
+			ID: entry.Instance,
+			Port: entry.Port,
+		}
+		pm.myPeer.Addresses = append(pm.myPeer.Addresses, entry.AddrIPv6...)
+		pm.myPeer.Addresses = append(pm.myPeer.Addresses, entry.AddrIPv4...)
+		pm.m.Unlock()
 		// ignore ourself
 		return
 	}
@@ -142,6 +189,30 @@ func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 	}
 	p.Addresses = append(p.Addresses, entry.AddrIPv6...)
 	p.Addresses = append(p.Addresses, entry.AddrIPv4...)
+
+	pm.m.Lock()
+	defer pm.m.Unlock()
+	if peer, ok := pm.peers[p.ID]; ok {
+		// already have this peer, just update addresses
+		log.Debugf("peer %s already known", p.ID)
+		peer.Addresses = p.Addresses
+		return
+	}
+
+	log.Debugf("new peer: %+v", p)
+	pm.peers[p.ID] = p
+}
+
+func (pm *PeerManager) handleGlobalEntry(entry *Peer) {
+	if entry.ID == pm.myUUID {
+		// ignore ourself
+		return
+	}
+	p := &Peer{
+		ID: entry.ID,
+		Port: entry.Port,
+		Addresses: entry.Addresses,
+	}
 
 	pm.m.Lock()
 	defer pm.m.Unlock()

@@ -93,7 +93,7 @@ type FrontendMessage struct {
 }
 
 type EncMessage struct {
-	From    int
+	From    string
 	Message string
 }
 
@@ -148,7 +148,7 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encMSG := EncMessage{
-		From:    me.ID,
+		From:    string(me.PublicKey),
 		Message: v.Message,
 	}
 

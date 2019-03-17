@@ -11,7 +11,7 @@ var app = new Vue({
     methods: {
         contactNameByID(id){
             for(let i = 0; i < this.contacts.length; i++ ){
-                if (this.contacts[i].ID == id){
+                if (this.contacts[i].PublicKey == id){
                     return this.contacts[i].Name
                 }
             }

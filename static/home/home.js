@@ -30,16 +30,14 @@ $(document).ready(function () {
 	fetch("/api/contacts/all").then(function (response) {
 		return response.json();
 	}).then(function (data) {
-		console.log(data)
 		for (var i = 0; i < data.length; i++){
-			$("#unique_id").append("<option value=" + data[i].Name + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
+			$("#unique_id").append("<option value=" + data[i].ID + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
 		}
 	})
 
 	fetch("/api/self").then(function (response) {	
 		return response.text();
 	}).then(function (data) {
-		console.log(data);
 		let result = "";
 		let count = 0;
 		let i = 26;

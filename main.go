@@ -51,18 +51,7 @@ func main() {
 
 	api := NewAPI(store, box)
 	go api.Run()
-	// fmt.Println(i)
 
-	msgs, err := store.EncryptedMessages()
-	if err != nil {
-		log.WithError(err).Error("unable to get messages")
-	}
-	fmt.Println(msgs)
-
-	pm := NewPeerManager()
-
-	mm := NewMessagesManager(store, pm)
-	_ = mm
-
+	pm := NewPeerManager(store)
 	pm.Run()
 }

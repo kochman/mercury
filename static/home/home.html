@@ -45,10 +45,10 @@
 
 	<div class="container">
 		<h1 class="title has-text-centered is-size-1"> Mercury </h1>
-
 		<!-- Send form -->
 		<div class="section">
 			<p>
+
 				<h2 class="is-size-1"> To: </h2>
 				<div class="field is-horizontal">
 					<div class="field-body">
@@ -78,12 +78,18 @@
 					</div>
 				</div>
 			</div>
+			<!-- Submit Button  -->
+			<br>
+			<div>
+				<button class="button is-info" onclick="validateForm()">Submit</button>
+			</div>
+			<br>
+			<div id="messagesentinfo" class="notification">
+				<p>Message Sent</p>
+			</div>
 		</div>
 
-		<!-- Submit Button  -->
-		<div>
-			<button class="button is-info" onclick="validateForm()">Submit</button>
-		</div>
+
 	</div>
 
 	<!-- JS FILE -->

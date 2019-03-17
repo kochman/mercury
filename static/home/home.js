@@ -11,7 +11,6 @@ function validateForm(){
 
 // Function to send the message 
 function sendMessage() {
-	console.log($("#unique_id").val())
 	fetch("/send", {
 		method: "POST",
 		body: JSON.stringify({
@@ -19,7 +18,11 @@ function sendMessage() {
 			Message: $("#message").val()
 		})
 	}).then(() => {
-		console.log("done")
+		console.log("here")
+		$("#messagesentinfo").show()
+		setTimeout(()=> {
+			$("#messagesentinfo").hide()
+		}, 1000)
 	})
 }
 
@@ -27,6 +30,7 @@ function sendMessage() {
 // get all available contacts and append 
 // them to the list of possible message receivers
 $(document).ready(function () {
+	$("#messagesentinfo").hide()
 	fetch("/api/contacts/all").then(function (response) {
 		return response.json();
 	}).then(function (data) {

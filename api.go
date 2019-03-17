@@ -157,6 +157,8 @@ func NewAPI(store *Store, box *packr.Box) *API {
 
 	r.Use(middleware.DefaultCompress)
 
+<<<<<<< HEAD
+=======
 	r.Get("/self", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 
@@ -169,6 +171,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 		// writes human readable public key to page
 		w.Write(pem.EncodeToMemory(block))
 	})
+>>>>>>> b1c4b0a3e1aaeec4a1bcd5ec47d38fddc1ea4c90
 
 	// MOCK DATA
 	// TO DELETE

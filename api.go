@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"encoding/pem"
 	"encoding/json"
 	"net/http"
 	"time"
+	// "reflect"
 
-
+	"github.com/gofrs/uuid"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/gobuffalo/packr/v2"
@@ -92,7 +94,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 			w.Header().Set("Content-Type", "application/json")
 
 			// get all the decrypted messages this person has
-			a, _ := store.DecryptedMessages()
+			a, _ := store.EncryptedMessages()
 	
 			// spacing out the json data
 			output, err := json.MarshalIndent(a, "", " ")
@@ -109,6 +111,35 @@ func NewAPI(store *Store, box *packr.Box) *API {
 	
 
 	//DO POST REQUEST HERE FOR SENDING MESSAGES
+	r.Post("/send", func(w http.ResponseWriter, r *http.Request){
+		err := r.ParseForm()
+		if err != nil {
+			// panic(err)
+		}
+		// v := r.Form.Get("to")
+		to := r.Form.Get("message")
+		
+		u2, err := uuid.NewV4()
+		if err != nil {
+			// fmt.Fatalf("failed to generate UUID: %v", err)
+		}
+		fmt.Printf("generated Version 4 UUID %v", u2)
+
+		msg := &EncryptedMessage{
+			ID:		 	[]byte(u2.String()),
+			Sent:	 	time.Now(),
+			Contents:	[]byte(to),
+		}
+
+		// fmt.Println("type of ", reflect.TypeOf(u2))
+		// nm.NewMessage(msg)
+		store.AddEncryptedMessage(msg)
+		//prints to web page
+		// fmt.Fprintln(w,v)
+		fmt.Fprintln(w,to)
+
+		
+	})
 
 
 	// listen

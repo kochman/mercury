@@ -301,7 +301,7 @@ func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
 }
 
 func (a *API) Run() {
-	err := http.ListenAndServe(":3000", a.r)
+	err := http.ListenAndServe(":3001", a.r)
 	if err != nil {
 		log.WithError(err).Error("unable to listen and serve")
 	}

@@ -12,7 +12,7 @@ var app = new Vue({
     computed: {
         msgArr: function() {
             this.messages.sort( ( a, b) => {
-                return new Date(a.Sent) - new Date(b.Sent);
+                return new Date(b.Sent) - new Date(a.Sent);
             });
             return this.messages;
         }

@@ -6,7 +6,16 @@ var app = new Vue({
        contacts: [],
     },
     mounted(){
+        setInterval(this.getMessages, 2000)
         this.fetchContacts().then(this.getMessages())
+    },
+    computed: {
+        msgArr: function() {
+            this.messages.sort( ( a, b) => {
+                return new Date(a.Sent) - new Date(b.Sent);
+            });
+            return this.messages;
+        }
     },
     methods: {
         contactNameByID(id){
@@ -23,6 +32,7 @@ var app = new Vue({
             })
         },
         getMessages(){
+            console.log("here")
             fetch("/api/messages").then((data) => data.json()).then((val) => {
                 this.messages = [];
                 for(let i = 0; i < val.length; i ++){

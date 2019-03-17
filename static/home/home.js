@@ -35,23 +35,20 @@ $(document).ready(function () {
 		return response.json();
 	}).then(function (data) {
 		for (var i = 0; i < data.length; i++){
-			$("#unique_id").append("<option value=" + data[i].ID + ">"+data[i].Name +" - " + data[i].ID+ "</option>");
+			$("#unique_id").append("<option value=" + data[i].ID + ">" + data[i].Name + " - " + data[i].ID + "</option>");
+			
 		}
-	})
-
-	fetch("/api/self").then(function (response) {	
-		return response.text();
-	}).then(function (data) {
-		let result = "";
-		let count = 0;
-		let i = 26;
-		while (count <= 10){
-			result += data[i];
-			i++;
-			count++;
+		
+		//parse arguments in the bar
+		// may be used for future url params
+		$.urlParam = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)')
+							.exec(window.location.search);
+			return (results !== null) ? results[1] || 0 : false;
 		}
-		result += "...";
-		$("#personal-key").text(result);
+		if ($.urlParam('user')) {
+			$('#unique_id').val($.urlParam('user'))
+		}
 	})
 })
 

@@ -54,6 +54,17 @@
             <button @click="myKeyModal = true;" class="button is-primary">
                 Show my details
             </button>
+            <p v-if="unknownPeers.length != 0" class="title">
+                New Peers
+            </p>
+            <div v-if="unknownPeers.length != 0" class="list is-hoverable">
+                <a @click="newContact = peer; createModal = true;" v-for="peer in unknownPeers" class="list-item">
+                    {{peer.Name}}
+                </a>
+            </div>
+            <p class="title">
+                Contacts
+            </p>
             <div class="list is-hoverable">
                 <a @click="targetContact = contact; modalActive = true;" v-for="contact in contacts" class="list-item">
                     {{contact.Name}}
@@ -63,7 +74,6 @@
                 <div class="modal-background"></div>
                 <div class="modal-content">
                     <div class="box">
-
                         <p class="title">
                             {{targetContact.Name}}
                         </p>
@@ -142,7 +152,14 @@
             </div>
         </div>
     </div>
+
+    <div class="container">
+        <div class="container">
+            <div id="discover"></div>
+        </div>
+    </div>
     <!-- JS FILE -->
+    <script src="/static/libs/jquery.js"></script>
     <script src="/static/addressbook/addressbook.controller.js"></script>
 
 </body>

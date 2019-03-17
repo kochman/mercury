@@ -241,24 +241,6 @@ func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
 
 	r.Use(middleware.DefaultCompress)
 
-	// MOCK DATA
-	// TO DELETE
-
-	msg := &EncryptedMessage{
-		ID:       "1",
-		Sent:     time.Now(),
-		Contents: []byte("test"),
-	}
-	msg2 := &EncryptedMessage{
-		ID:       "2",
-		Sent:     time.Now(),
-		Contents: []byte("test"),
-	}
-
-	store.AddEncryptedMessage(msg)
-	store.AddEncryptedMessage(msg2)
-
-	//DELETE ABOVE MOCK DATA
 
 	r.Method("GET", "/static/*", http.FileServer(box))
 

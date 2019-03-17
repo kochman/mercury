@@ -14,13 +14,21 @@ var app = new Vue({
         myPubKey: "",
         myKeyModal: false,
         myName: "joey",
+        unknownPeers: [],
 
     },
     mounted(){
         this.fetchContacts();
         this.getMyName();
-        fetch("/api/self").then((data)=> data.text()).then((val) => {
+        fetch("/api/self").then((data) => data.text()).then((val) => {
             this.myPubKey = val;
+        })
+        let el = this;
+
+        fetch("/api/contacts/peers").then(function (response) {
+            return response.json();
+        }).then(function (data) {
+            el.unknownPeers = data;
         })
     },
     methods: {

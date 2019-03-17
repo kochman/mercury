@@ -64,6 +64,17 @@ func (s *Store) CreateContact(c *Contact) error {
 	return s.db.Save(c)
 }
 
+func (s *Store) PublicKeyAdded(pubkey []byte) (bool, error) {
+	c := &Contact{}
+	err := s.db.One("PublicKey", pubkey, c)
+	if err == storm.ErrNotFound {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // MyInfo stores the info for the current user
 type MyInfo struct {
 	ID         int

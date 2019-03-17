@@ -19,6 +19,7 @@ type API struct {
 	box   *packr.Box
 	r     http.Handler
 	store *Store
+	pm *PeerManager
 }
 
 func (a *API) IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +51,17 @@ func (a *API) GetContactsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, ret)
+}
 
+func (a *API) GetPeerContactsHandler(w http.ResponseWriter, r *http.Request) {
+	ret, err := a.pm.NewContacts()
+	if err != nil {
+		http.Error(w, "unable to get peer contacts", http.StatusInternalServerError)
+		log.WithError(err).Error("unable to get peer contacts")
+		return
+	}
+
+	WriteJSON(w, ret)
 }
 
 func (a *API) MessagePageHandler(w http.ResponseWriter, r *http.Request) {
@@ -171,11 +182,12 @@ func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewAPI(store *Store, box *packr.Box) *API {
+func NewAPI(store *Store, box *packr.Box, pm *PeerManager) *API {
 
 	a := &API{
 		box:   box,
 		store: store,
+		pm: pm,
 	}
 	// gets users own info
 	i, _ := store.MyInfo()
@@ -238,6 +250,7 @@ func NewAPI(store *Store, box *packr.Box) *API {
 		r.Route("/contacts", func(r chi.Router) {
 			r.Get("/all", a.GetContactsHandler)
 			r.Post("/create", a.CreateContactHandler)
+			r.Get("/peers", a.GetPeerContactsHandler)
 		})
 	})
 
@@ -258,7 +271,10 @@ func NewAPI(store *Store, box *packr.Box) *API {
 }
 
 func (a *API) Run() {
-	http.ListenAndServe(":3000", a.r)
+	err := http.ListenAndServe(":3000", a.r)
+	if err != nil {
+		log.WithError(err).Error("unable to listen and serve")
+	}
 }
 
 // WriteJSON writes the data as JSON.

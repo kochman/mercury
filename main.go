@@ -64,10 +64,9 @@ func main() {
 	// 	}
 
 	// }
-
-	api := NewAPI(store, box)
-	go api.Run()
-
 	pm := NewPeerManager(store)
-	pm.Run()
+	go pm.Run()
+
+	api := NewAPI(store, box, pm)
+	api.Run()
 }

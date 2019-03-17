@@ -29,6 +29,7 @@ type Peer struct {
 	ID string
 	Addresses []net.IP
 	Port int
+	Contact *Contact
 }
 
 func NewPeerManager(s *Store) *PeerManager {
@@ -109,6 +110,27 @@ func (pm *PeerManager) Run() {
 	}
 }
 
+func (pm *PeerManager) NewContacts() ([]*Contact, error) {
+	contacts := []*Contact{}
+	pm.m.Lock()
+	defer pm.m.Unlock()
+	for _, peer := range pm.peers {
+		if peer.Contact == nil {
+			continue
+		}
+		added, err := pm.s.PublicKeyAdded(peer.Contact.PublicKey)
+		if err != nil {
+			log.Error("HERE")
+			return contacts, err
+		}
+		if added {
+			continue
+		}
+		contacts = append(contacts, peer.Contact)
+	}
+	return contacts, nil
+}
+
 func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 	if entry.Instance == pm.myUUID {
 		// ignore ourself
@@ -123,9 +145,10 @@ func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
 
 	pm.m.Lock()
 	defer pm.m.Unlock()
-	if _, ok := pm.peers[p.ID]; ok {
-		// already have this peer
+	if peer, ok := pm.peers[p.ID]; ok {
+		// already have this peer, just update addresses
 		log.Debugf("peer %s already known", p.ID)
+		peer.Addresses = p.Addresses
 		return
 	}
 
@@ -187,6 +210,27 @@ func (pm *PeerManager) fetchMessages() {
 			} else {
 				log.Errorf("peer %s addr type is unknown", peerID)
 				continue
+			}
+
+			if peer.Contact == nil {
+				contactEndpoint := endpoint
+				contactEndpoint.Path = "/pubkey"
+				req, err := http.NewRequest(http.MethodGet, contactEndpoint.String(), nil)
+				if err != nil {
+					continue
+				}
+				resp, err := c.Do(req)
+				if err != nil {
+					continue
+				}
+				dec := json.NewDecoder(resp.Body)
+				c := &Contact{}
+				err = dec.Decode(c)
+				if err != nil {
+					log.WithError(err).Error("unable to decode peer contact")
+					continue
+				}
+				peer.Contact = c
 			}
 
 			req, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)

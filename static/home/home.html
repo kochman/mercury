@@ -3,73 +3,93 @@
 
 <head>
 	<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="./home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
 	<title>Mercury</title>
 </head>
 
 <body>
 
-<div id="nav-bar">
-  <!-- Navbar (sit on top) -->
-  <div class="w3-top">
-    <div class="w3-bar w3-white w3-wide w3-padding w3-card">
-      <a href="../home/home.html" class="w3-bar-item w3-button"><b>Mercury</b></a>
-      <!-- Float links to the right. Hide them on small screens -->
-      <div class="w3-right w3-hide-small">
-        <a href="address.html" class="w3-bar-item w3-button">Address Book</a>
-        <a href="messages.html" class="w3-bar-item w3-button">Messages</a>
-        <a href="../about/about.html" class="w3-bar-item w3-button">About</a>
-      </div>
-    </div>
-  </div>
-</div>
+	<!-- Nav Bar -->
+	<nav class="navbar" role="navigation" aria-label="main navigation">
+		<div class="navbar-brand">
+			<a class="navbar-item" href="/">
+				<h2> Mercury </h2>
+			</a>
 
-<div class="container">
-	<h1 style="font-size:65px;text-align:center;position:relative;top:50px"> Send A Message </h1>
-	<!-- Send form -->
-	<div class="section">
-	<p>
-		<h2> To: </h2>
-		<div class="field is-horizontal">
-  			<div class="field-body">
-    			<div class="field is-narrow">
-      				<div class="control">
-        				<div class="select is-fullwidth">
-          				<select id="unique_id">
-            				<option>Address 1</option>
-            				<option>Address 2</option>
-            				<option>Address 3</option>
-          				</select>
-        				</div>
-      				</div>
-    			</div>
-  			</div>
+			<a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
+				data-target="navbarBasicExample">
+				<span aria-hidden="true"></span>
+				<span aria-hidden="true"></span>
+				<span aria-hidden="true"></span>
+			</a>
 		</div>
-	</p>
-	</div>
-    
-	<!-- Message form -->
-	<div class="section">
-		<h2 id="sub-title-message">Message:<br> 
-		<div class="field-body">
-    		<div class="field">
-      			<div class="control">
-        			<textarea id="message" name="message" class="textarea" form="form" placeholder="What do you want to say?"></textarea>
-      			</div>
-    		</div>
-  		</div>
+
+		<div id="navbarBasicExample" class="navbar-menu">
+			<div class="navbar-start">
+				<a class="navbar-item" href="/contacts">
+					Contacts
+				</a>
+
+				<a class="navbar-item" href="/messages">
+					Messages
+				</a>
+
+				<a class="navbar-item" href="https://github.com/kochman/mercury">
+						About
+				</a>
+
+				</div>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container">
+		<h1 class="title has-text-centered is-size-1"> Mercury </h1>
+
+		<!-- Send form -->
+		<div class="section">
+			<p>
+				<h2 class="is-size-1"> To: </h2>
+				<div class="field is-horizontal">
+					<div class="field-body">
+						<div class="field is-narrow">
+							<div class="control">
+								<div class="select is-fullwidth">
+									<select id="unique_id">
+										<option>Address 1</option>
+										<option>Address 2</option>
+										<option>Address 3</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</p>
+		</div>
+
+		<!-- Message form -->
+		<div class="section">
+			<h2 id="sub-title-message" class="is-size-1" >Message:<br></h2>
+				<div class="field-body">
+					<div class="field">
+						<div class="control">
+							<textarea id="message" name="message" class="textarea" form="form"
+								placeholder="What do you want to say?"></textarea>
+						</div>
+					</div>
+				</div>
+		</div>
+
+		<!-- Submit Button  -->
+		<div>
+			<button class="button is-info" onclick="validateForm()">Submit</button>
+		</div>
 	</div>
 
-	<!-- Submit Button  -->
-	<div id="button" >
-		<button class="button is-info is-outlined" onclick="validateForm()">Submit</button>
-	</div>
-</div>
-
-<!-- JS FILE --> 
-<script src="/static/home/home.js"></script>
+	<!-- JS FILE -->
+	<script src="/static/home/home.js"></script>
 </body>
+
 </html>

@@ -118,7 +118,7 @@ func (pm *PeerManager) Run() {
 				log.WithError(err).Error("unable to marshal")
 				continue
 			}
-			resp, err := c.Post("http://discovery.getmercury.org/notify", "application/json", bytes.NewBuffer(b))
+			resp, err := c.Post("https://discovery.getmercury.org/notify", "application/json", bytes.NewBuffer(b))
 			if err != nil {
 				log.WithError(err).Error("unable to post")
 				continue

@@ -34,6 +34,23 @@ $(document).ready(function () {
 			$("#unique_id").append("<option value=" + data[i].Name + ">"+data[i].Name +"</option>");
 		}
 	})
+
+	fetch("/api/self").then(function (response) {	
+		return response.text();
+	}).then(function (data) {
+		console.log(data);
+		let result = "";
+		let count = 0;
+		let i = 26;
+		while (count <= 10){
+			result += data[i];
+			i++;
+			count++;
+		}
+		result += "...";
+		$("#personal-id").text(result);
+	})
 })
+
 
 

@@ -78,6 +78,72 @@ func (a *API) CreateContactHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type FrontendMessage struct {
+	TargetUserID int
+	Message      string
+}
+
+func (a *API) SendMessage(w http.ResponseWriter, r *http.Request) {
+	v := &FrontendMessage{}
+	err := json.NewDecoder(r.Body).Decode(v)
+	if err != nil {
+		w.WriteHeader(403)
+		w.Write([]byte("malformed request"))
+		return
+	}
+
+	c, err := a.store.Contacts()
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	var sendTo *Contact
+	for _, contact := range c {
+		if contact.ID == v.TargetUserID {
+			sendTo = contact
+			break
+		}
+	}
+
+	if sendTo == nil {
+		w.WriteHeader(500)
+		w.Write([]byte("invalid contact"))
+		return
+	}
+
+	u2, err := uuid.NewV4()
+	if err != nil {
+		// fmt.Fatalf("failed to generate UUID: %v", err)
+	}
+	fmt.Printf("generated Version 4 UUID %v", u2)
+	keyPair, err := PublicKeyFromBytes(sendTo.PublicKey)
+	if err != nil {
+		w.Write([]byte("Unable to get public key"))
+		w.WriteHeader(500)
+		return
+	}
+	content, err := keyPair.Sign("msg", v.Message)
+	if err != nil {
+		w.Write([]byte("unable to sign message"))
+		w.WriteHeader(500)
+		return
+	}
+
+	msg := &EncryptedMessage{
+		ID:       []byte(u2.String()),
+		Sent:     time.Now(),
+		Contents: []byte(*content),
+	}
+
+	// fmt.Println("type of ", reflect.TypeOf(u2))
+	// nm.NewMessage(msg)
+	a.store.AddEncryptedMessage(msg)
+	//prints to web page
+	// fmt.Fprintln(w,v)
+	fmt.Fprintln(w, msg)
+
+}
+
 func NewAPI(store *Store, box *packr.Box) *API {
 
 	a := &API{
@@ -164,40 +230,12 @@ func NewAPI(store *Store, box *packr.Box) *API {
 	})
 
 	//DO POST REQUEST HERE FOR SENDING MESSAGES
-	r.Post("/send", func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			// panic(err)
-		}
-		// v := r.Form.Get("to")
-		to := r.Form.Get("message")
-
-		u2, err := uuid.NewV4()
-		if err != nil {
-			// fmt.Fatalf("failed to generate UUID: %v", err)
-		}
-		fmt.Printf("generated Version 4 UUID %v", u2)
-
-		msg := &EncryptedMessage{
-			ID:       []byte(u2.String()),
-			Sent:     time.Now(),
-			Contents: []byte(to),
-		}
-
-		// fmt.Println("type of ", reflect.TypeOf(u2))
-		// nm.NewMessage(msg)
-		store.AddEncryptedMessage(msg)
-		//prints to web page
-		// fmt.Fprintln(w,v)
-		fmt.Fprintln(w, to)
-
-	})
+	r.Post("/send")
 
 	// listen
 	r.Get("/", a.IndexHandler)
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", a.AddressBookHandler)
-
 
 	})
 

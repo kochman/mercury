@@ -50,9 +50,6 @@ $(document).ready(function () {
 			count++;
 		}
 		result += "...";
-		$("#personal-id").text(result);
+		$("#personal-key").text(result);
 	})
 })
-
-
-

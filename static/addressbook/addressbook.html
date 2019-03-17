@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/static/addressbook/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.9/dist/vue.js"></script>
+
+
+    <title>Mercury</title>
+</head>
+
+<body>
+    <div class="section">
+        <div class="container">
+            <p class="title">
+                Address book
+            </p>
+        </div>
+    </div>
+    <div id="app" class="container">
+        <div class="container">
+            <button @click="createModal = true;" class="button is-info">
+                Add
+            </button>
+            <button @click="myKeyModal = true;" class="button is-primary">
+                Show my details
+            </button>
+            <div class="list is-hoverable">
+                <a @click="targetContact = contact; modalActive = true;" v-for="contact in contacts" class="list-item">
+                    {{contact.Name}}
+                </a>
+            </div>
+            <div class="modal" :class="{'is-active': modalActive}">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="box">
+
+                        <p class="title">
+                            {{targetContact.Name}}
+                        </p>
+                        <p>Public Key:</p>
+                        <pre style="white-space: pre-wrap; word-wrap: break-word;">{{targetContact.PublicKey}}</pre>
+                    </div>
+                </div>
+                <button @click="modalActive=false;" class="modal-close is-large" aria-label="close"></button>
+            </div>
+            <div class="modal" :class="{'is-active': createModal}">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="box">
+                        <fieldset>
+                            <!-- Form Name -->
+                            <legend>New Contact</legend>
+
+                            <!-- Text input-->
+                            <div class="field">
+                                <label class="label" for="name">Name</label>
+                                <div class="control">
+                                    <input v-model="newContact.Name" id="name" name="name" type="text"
+                                        placeholder="Name" class="input ">
+                                    <p v-if="newContact.Name.length == 0" class="help">Name cannot be blank</p>
+                                </div>
+                            </div>
+
+                            <!-- Textarea -->
+                            <div class="field">
+                                <label class="label" for="publicKey">Public Key</label>
+                                <div class="control">
+                                    <textarea v-model="newContact.PublicKey" class="textarea" id="publicKey"
+                                        name="publicKey"></textarea>
+                                    <p v-if="newContact.PublicKey.length == 0" class="help">PublicKey cannot be
+                                        blank</p>
+
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <button :disabled="newContact.PublicKey.length ==0 || newContact.Name.length == 0"
+                                    @click="createNewContact" class="button is-info">Submit</button>
+                            </div>
+
+                        </fieldset>
+
+                    </div>
+                </div>
+                <button @click="createModal=false;" class="modal-close is-large" aria-label="close"></button>
+            </div>
+            <div class="modal" :class="{'is-active': myKeyModal}">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="box">
+                        <pre class="word-wrap: break-word; white-space: pre-wrap;">{{myPubKey}}</pre>
+
+                    </div>
+                </div>
+                <button @click="myKeyModal=false;" class="modal-close is-large" aria-label="close"></button>
+            </div>
+        </div>
+    </div>
+    <!-- JS FILE -->
+    <script src="/static/addressbook/addressbook.controller.js"></script>
+
+</body>
+
+</html>

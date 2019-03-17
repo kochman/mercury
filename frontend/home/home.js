@@ -14,17 +14,19 @@ function validateForm(){
 function sendMessage() {
 	
 	$.ajax({
-		url: "localhost:3000/send",
+		url: "127.0.0.1:3000/send",
 		method: "POST",
 		data: {
 			TargetUserID: $("#unique_id"),
 			Message: $("#message")
 		},
+		dataType:"json",
 		success: function (result) {
 			console.log("success")
 			console.log(result)
 		}
 	})
+	console.log("asdf")
 	return false;
 }
 

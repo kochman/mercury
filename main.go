@@ -43,8 +43,6 @@ func main() {
 			store.SetMyInfo(&myInfo)
 		}
 	}
-	i, err = store.MyInfo()
-
 	CreateRoutes(store, box)
 
 	if err != nil {

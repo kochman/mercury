@@ -39,7 +39,7 @@ func NewStore() (*Store, error) {
 // Contacts
 
 type Contact struct {
-	ID        int
+	ID        int `storm:"id,increment"`
 	Name      string
 	PublicKey []byte
 }

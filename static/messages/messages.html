@@ -2,34 +2,67 @@
 <html lang="en-US">
 
 <head>
-	<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="/static/home/home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-	<title>Mercury</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.9/dist/vue.js"></script>
+
+  <title>Mercury</title>
 </head>
+<!-- Nav Bar -->
 
 <body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <h2> Mercury </h2>
+      </a>
 
-<div id="nav-bar">
-  <!-- Navbar (sit on top) -->
-  <div class="w3-top">
-    <div class="w3-bar w3-white w3-wide w3-padding w3-card">
-      <a href="/static/home/home.html" class="w3-bar-item w3-button"><b>Mercury</b></a>
-      <!-- Float links to the right. Hide them on small screens -->
-      <div class="w3-right w3-hide-small">
-        <a href="/static/addressbook/addressbook.html" class="w3-bar-item w3-button">Address Book</a>
-        <a href="/static/messages/messages.html" class="w3-bar-item w3-button">Messages</a>
-        <a href="/static/about/about.html" class="w3-bar-item w3-button">About</a>
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
+        data-target="navbarBasicExample">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="/contacts">
+          Contacts
+        </a>
+
+        <a class="navbar-item" href="/messages">
+          Messages
+        </a>
+
+        <a class="navbar-item" href="https://github.com/kochman/mercury">
+          About
+        </a>
+
+      </div>
+    </div>
+    </div>
+  </nav>
+  <div class="section">
+    <div class="container">
+      <p class="title">
+        Your Messages
+      </p>
+    </div>
+  </div>
+  <div class="container" id="app">
+    <div class="columns is-centered">
+      <div class="column is-two-thirds">
+        <div v-for="message in messages" class="notification">
+          <h1 class="title">From: {{message.Contents.From}}</h1>
+          <p style="word-wrap: break-word;">{{message.Contents.Message}}</p>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="container">
-	
-</div>
-
+  <script src="/static/messages/messages.js"></script>
 </body>
+
 </html>

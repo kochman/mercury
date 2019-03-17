@@ -19,7 +19,7 @@ function sendMessage() {
 			Message: $("#message").val()
 		})
 	}).then(() => {
-		console.log("dopne")
+		console.log("done")
 	})
 }
 

@@ -19,6 +19,7 @@ import (
 type PeerManager struct {
 	s *Store
 	handler http.Handler
+	myUUID string
 	m *sync.Mutex
 	peers map[string]*Peer
 }
@@ -64,15 +65,22 @@ func (pm *PeerManager) Run() {
 	// register us
 	u, err := uuid.NewV4()
 	if err != nil {
-		log.WithError(err).Error("unable to get hostname")
+		log.WithError(err).Error("unable to generate UUID")
 		return
 	}
-	server, err := zeroconf.Register(u.String(), "_mercury._tcp", "local.", port, nil, nil)
-	if err != nil {
-		log.WithError(err).Error("unable to register zeroconf service")
-		return
-	}
-	defer server.Shutdown()
+	pm.myUUID = u.String()
+
+	go func() {
+		for {
+			server, err := zeroconf.Register(pm.myUUID, "_mercury._tcp", "local.", port, nil, nil)
+			if err != nil {
+				log.WithError(err).Error("unable to register zeroconf service")
+				continue
+			}
+			<-time.After(time.Second*10)
+			server.Shutdown()
+		}
+	}()
 
 	// find others
 	entries := make(chan *zeroconf.ServiceEntry)
@@ -100,6 +108,10 @@ func (pm *PeerManager) Run() {
 }
 
 func (pm *PeerManager) handleEntry(entry *zeroconf.ServiceEntry) {
+	if entry.Instance == pm.myUUID {
+		// ignore ourself
+		return
+	}
 	p := &Peer{
 		ID: entry.Instance,
 		Port: entry.Port,
@@ -187,6 +199,7 @@ func (pm *PeerManager) fetchMessages() {
 				// idk if this is right but whatever
 				endpoint.Host = "[" + addr.String() + "]:" + strconv.Itoa(peer.Port)
 			} else {
+				log.Errorf("peer %s addr type is unknown", peerID)
 				continue
 			}
 
